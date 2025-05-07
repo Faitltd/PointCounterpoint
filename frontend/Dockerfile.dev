@@ -9,7 +9,7 @@ COPY package*.json ./
 RUN npm install
 
 # Set environment variables
-ENV REACT_APP_API_URL=http://localhost:5000
+ENV REACT_APP_API_URL=http://localhost:5001
 
 # Start the app in development mode
 CMD ["npm", "start"]

@@ -1,19 +1,22 @@
 import React from 'react';
-import './PerspectiveToggle.css';
 
 function PerspectiveToggle({ activePerspective, onPerspectiveChange }) {
   const perspectives = [
-    { id: 'liberal', label: 'Liberal' },
-    { id: 'neutral', label: 'Neutral' },
-    { id: 'conservative', label: 'Conservative' }
+    { id: 'liberal', label: 'Liberal Perspective' },
+    { id: 'conservative', label: 'Conservative Perspective' }
   ];
-  
+
+  // Function to clear the active perspective
+  const clearPerspective = () => {
+    onPerspectiveChange(null);
+  };
+
   return (
     <div className="perspective-toggle">
-      <h3>View From Different Perspectives:</h3>
+      <h3>View Political Perspectives</h3>
       <div className="toggle-buttons">
         {perspectives.map(perspective => (
-          <button 
+          <button
             key={perspective.id}
             className={activePerspective === perspective.id ? 'active' : ''}
             onClick={() => onPerspectiveChange(perspective.id)}
@@ -21,6 +24,14 @@ function PerspectiveToggle({ activePerspective, onPerspectiveChange }) {
             {perspective.label}
           </button>
         ))}
+        {activePerspective && (
+          <button
+            className="clear-button"
+            onClick={clearPerspective}
+          >
+            Hide Perspective
+          </button>
+        )}
       </div>
     </div>
   );

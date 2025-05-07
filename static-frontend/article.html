@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Article - PointCounterpoint</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+            line-height: 1.6;
+        }
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2196f3;
+            text-decoration: none;
+        }
+        .content {
+            padding: 20px 0;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+            color: #666;
+        }
+        .error {
+            color: #d32f2f;
+            text-align: center;
+            padding: 40px;
+        }
+        .article-header {
+            margin-bottom: 30px;
+        }
+        .article-title {
+            font-size: 32px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .article-meta {
+            display: flex;
+            gap: 15px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .article-content {
+            font-size: 18px;
+            line-height: 1.8;
+            margin-bottom: 40px;
+        }
+        .perspectives-container {
+            margin-top: 40px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+        .perspectives-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .perspectives-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .perspective-card {
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .perspective-card.liberal {
+            border-left: 5px solid #2196f3;
+        }
+        .perspective-card.conservative {
+            border-left: 5px solid #f44336;
+        }
+        .perspective-card.neutral {
+            border-left: 5px solid #4caf50;
+        }
+        .perspective-title {
+            font-size: 18px;
+            margin-bottom: 10px;
+            text-transform: capitalize;
+        }
+        .perspective-title.liberal {
+            color: #2196f3;
+        }
+        .perspective-title.conservative {
+            color: #f44336;
+        }
+        .perspective-title.neutral {
+            color: #4caf50;
+        }
+        .perspective-content {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        .back-button {
+            display: inline-block;
+            background-color: #2196f3;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background-color 0.2s ease;
+            margin-bottom: 20px;
+        }
+        .back-button:hover {
+            background-color: #0d8aee;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="logo">PointCounterpoint</a>
+    </nav>
+
+    <div class="content">
+        <a href="index.html" class="back-button">← Back to Headlines</a>
+        <div id="article-container">
+            <div class="loading">Loading article...</div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://news-perspectives-backend-qlkvtyydjq-uc.a.run.app';
+
+        // Get article ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const articleId = urlParams.get('id');
+
+        // Load article when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!articleId) {
+                document.getElementById('article-container').innerHTML =
+                    '<div class="error">Article ID not provided. Please go back and try again.</div>';
+                return;
+            }
+
+            loadArticle(articleId);
+        });
+
+        // Function to load article
+        function loadArticle(id) {
+            const container = document.getElementById('article-container');
+            container.innerHTML = '<div class="loading">Loading article...</div>';
+
+            fetch(`${API_URL}/api/news/article/${id}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch article');
+                    }
+                    return response.json();
+                })
+                .then(article => {
+                    // Update page title
+                    document.title = `${article.title} - PointCounterpoint`;
+
+                    // Format perspectives
+                    const perspectivesHTML = article.perspectives.map(perspective => `
+                        <div class="perspective-card ${perspective.viewpoint}">
+                            <h3 class="perspective-title ${perspective.viewpoint}">${perspective.viewpoint} Perspective</h3>
+                            <p class="perspective-content">${perspective.summary}</p>
+                        </div>
+                    `).join('');
+
+                    const articleHTML = `
+                        <div class="article-header">
+                            <h1 class="article-title">${article.title}</h1>
+                            <div class="article-meta">
+                                <span class="source">Source: ${article.source.name}</span>
+                                <span class="date">Published: ${new Date(article.publishedAt).toLocaleDateString()}</span>
+                                <span class="category">Category: ${article.category}</span>
+                            </div>
+                        </div>
+                        <div class="article-content">
+                            ${article.content}
+                        </div>
+                        <div class="perspectives-container">
+                            <h2 class="perspectives-title">Different Perspectives</h2>
+                            <div class="perspectives-grid">
+                                ${perspectivesHTML}
+                            </div>
+                        </div>
+                    `;
+
+                    container.innerHTML = articleHTML;
+                })
+                .catch(error => {
+                    console.error('Error fetching article:', error);
+                    container.innerHTML = `<div class="error">Failed to load article. Please try again later.</div>`;
+                });
+        }
+    </script>
+</body>
+</html>
