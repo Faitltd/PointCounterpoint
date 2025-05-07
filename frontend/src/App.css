@@ -1,0 +1,57 @@
+.app {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.content {
+  padding: 20px 0;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  font-size: 18px;
+  color: #666;
+}
+
+.error {
+  color: #d32f2f;
+  text-align: center;
+  padding: 40px;
+}
+
+/* Add styles for ArticleList */
+.articles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.article-card {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Add styles for SummaryView */
+.summary-view {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 20px;
+  color: #2196f3;
+  text-decoration: none;
+}
+
+.summary-content {
+  background: #f9f9f9;
+  padding: 20px;
+  border-radius: 8px;
+  margin: 20px 0;
+}
