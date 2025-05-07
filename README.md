@@ -33,8 +33,9 @@ news-perspectives-app/
 ## Prerequisites
 
 - Node.js (v14 or higher)
-- MongoDB database
+- Supabase account and project
 - OpenAI API key
+- NewsAPI key
 - Docker (for containerization)
 - Google Cloud account (for Cloud Run deployment)
 
@@ -52,11 +53,20 @@ news-perspectives-app/
    npm install
    ```
 
-3. Create a `.env` file with the following variables:
+3. Create a `.env` file with the following variables (see `.env.example` for a template):
    ```
-   MONGODB_URI=your_mongodb_connection_string
-   OPENAI_API_KEY=your_openai_api_key
-   PORT=5000
+   # OpenAI API Key - Get from https://platform.openai.com/api-keys
+   OPENAI_API_KEY=your_openai_api_key_here
+
+   # NewsAPI Key - Get from https://newsapi.org/register
+   NEWS_API_KEY=your_newsapi_key_here
+
+   # Supabase Configuration
+   SUPABASE_URL=https://ueqselkevtzpzgcapbzc.supabase.co
+   SUPABASE_KEY=your_supabase_key_here
+
+   # Server Configuration
+   PORT=5001
    ```
 
 4. Start the development server:
@@ -99,7 +109,7 @@ This will start both the frontend and backend services.
    ```
    cd backend
    gcloud builds submit --tag gcr.io/[PROJECT_ID]/news-perspectives-backend
-   gcloud run deploy news-perspectives-backend --image gcr.io/[PROJECT_ID]/news-perspectives-backend --platform managed --region us-central1 --allow-unauthenticated --set-env-vars MONGODB_URI=[YOUR_MONGODB_URI],OPENAI_API_KEY=[YOUR_OPENAI_API_KEY]
+   gcloud run deploy news-perspectives-backend --image gcr.io/[PROJECT_ID]/news-perspectives-backend --platform managed --region us-central1 --allow-unauthenticated --set-env-vars OPENAI_API_KEY=[YOUR_OPENAI_API_KEY],NEWS_API_KEY=[YOUR_NEWS_API_KEY],SUPABASE_URL=[YOUR_SUPABASE_URL],SUPABASE_KEY=[YOUR_SUPABASE_KEY]
    ```
 
 2. Build and push the frontend image:
@@ -113,11 +123,15 @@ This will start both the frontend and backend services.
 
 1. Set up secret environment variables in Secret Manager:
    ```
-   gcloud secrets create MONGODB_URI --replication-policy automatic
    gcloud secrets create OPENAI_API_KEY --replication-policy automatic
-   
-   echo -n "your_mongodb_uri" | gcloud secrets versions add MONGODB_URI --data-file=-
+   gcloud secrets create NEWS_API_KEY --replication-policy automatic
+   gcloud secrets create SUPABASE_URL --replication-policy automatic
+   gcloud secrets create SUPABASE_KEY --replication-policy automatic
+
    echo -n "your_openai_api_key" | gcloud secrets versions add OPENAI_API_KEY --data-file=-
+   echo -n "your_news_api_key" | gcloud secrets versions add NEWS_API_KEY --data-file=-
+   echo -n "your_supabase_url" | gcloud secrets versions add SUPABASE_URL --data-file=-
+   echo -n "your_supabase_key" | gcloud secrets versions add SUPABASE_KEY --data-file=-
    ```
 
 2. Grant Secret Manager access to Cloud Build service account:

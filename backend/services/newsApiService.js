@@ -2,7 +2,7 @@ const axios = require('axios');
 require('dotenv').config();
 
 // We'll use the NewsAPI.org service with the provided API key
-const NEWS_API_KEY = 'aaf9fecd4d8b4ea6ac3f7dd5f322c607';
+const NEWS_API_KEY = process.env.NEWS_API_KEY;
 const NEWS_API_URL = 'https://newsapi.org/v2';
 
 /**
