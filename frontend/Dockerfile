@@ -13,7 +13,8 @@ RUN npm ci
 COPY . .
 
 # Set the API URL for production
-ENV REACT_APP_API_URL=https://backend-service-url.a.run.app
+ENV REACT_APP_API_URL=https://news-perspectives-backend-fait-444705.a.run.app
+ENV REACT_APP_GOOGLE_API_KEY=AIzaSyCMbpCUgNl7acYkY9bwo1C4c36vWVJXqfY
 
 # Build the app
 RUN npm run build
