@@ -46,9 +46,5 @@ images:
   - 'gcr.io/$PROJECT_ID/news-perspectives-backend'
   - 'gcr.io/$PROJECT_ID/news-perspectives-frontend'
 
-substitutions:
-  _MONGODB_URI: ${_MONGODB_URI}
-  _OPENAI_API_KEY: ${_OPENAI_API_KEY}
-
 options:
   logging: CLOUD_LOGGING_ONLY
