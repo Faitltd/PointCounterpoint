@@ -1,50 +1,50 @@
 steps:
   # Build the backend container image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/news-perspectives-backend', './backend']
+    args: ['build', '-t', 'gcr.io/fait-444705/pointcounterpoint-backend', './backend']
 
   # Push the backend container image to Container Registry
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/news-perspectives-backend']
+    args: ['push', 'gcr.io/fait-444705/pointcounterpoint-backend']
 
-  # Deploy backend container image to Cloud Run
+  # Deploy backend to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
       - 'run'
       - 'deploy'
-      - 'news-perspectives-backend'
-      - '--image=gcr.io/$PROJECT_ID/news-perspectives-backend'
+      - 'pointcounterpoint-backend'
+      - '--image=gcr.io/fait-444705/pointcounterpoint-backend'
       - '--region=us-central1'
       - '--platform=managed'
       - '--allow-unauthenticated'
-      - '--set-secrets=MONGODB_URI=MONGODB_URI:latest,OPENAI_API_KEY=OPENAI_API_KEY:latest'
+      - '--set-env-vars=OPENAI_API_KEY=${_OPENAI_API_KEY},NEWS_API_KEY=${_NEWS_API_KEY},SUPABASE_URL=https://ueqselkevtzpzgcapbzc.supabase.co,SUPABASE_KEY=${_SUPABASE_KEY}'
 
   # Build the frontend container image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/news-perspectives-frontend',
-           '--build-arg', 'REACT_APP_API_URL=https://news-perspectives-backend-fait-444705.a.run.app',
-           './frontend']
+    args: ['build', '-t', 'gcr.io/fait-444705/pointcounterpoint-frontend', './frontend']
 
   # Push the frontend container image to Container Registry
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/news-perspectives-frontend']
+    args: ['push', 'gcr.io/fait-444705/pointcounterpoint-frontend']
 
-  # Deploy frontend container image to Cloud Run
+  # Deploy frontend to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
       - 'run'
       - 'deploy'
-      - 'news-perspectives-frontend'
-      - '--image=gcr.io/$PROJECT_ID/news-perspectives-frontend'
+      - 'pointcounterpoint-frontend'
+      - '--image=gcr.io/fait-444705/pointcounterpoint-frontend'
       - '--region=us-central1'
       - '--platform=managed'
       - '--allow-unauthenticated'
 
-images:
-  - 'gcr.io/$PROJECT_ID/news-perspectives-backend'
-  - 'gcr.io/$PROJECT_ID/news-perspectives-frontend'
+substitutions:
+  _OPENAI_API_KEY: ''
+  _NEWS_API_KEY: ''
+  _SUPABASE_KEY: ''
 
-options:
-  logging: CLOUD_LOGGING_ONLY
+images:
+  - 'gcr.io/fait-444705/pointcounterpoint-backend'
+  - 'gcr.io/fait-444705/pointcounterpoint-frontend'

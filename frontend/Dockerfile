@@ -1,5 +1,5 @@
 # Build stage
-FROM node:18-alpine as build
+FROM --platform=linux/amd64 node:18-alpine as build
 
 WORKDIR /app
 
@@ -7,7 +7,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci
+RUN npm install
 
 # Copy app source code
 COPY . .
@@ -20,7 +20,7 @@ ENV REACT_APP_GOOGLE_API_KEY=AIzaSyCMbpCUgNl7acYkY9bwo1C4c36vWVJXqfY
 RUN npm run build
 
 # Production stage
-FROM nginx:alpine
+FROM --platform=linux/amd64 nginx:alpine
 
 # Copy built files from build stage
 COPY --from=build /app/build /usr/share/nginx/html
