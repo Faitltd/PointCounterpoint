@@ -16,8 +16,8 @@ function SummaryView({ writingStyle: globalWritingStyle }) {
     const fetchArticle = async () => {
       console.log('Fetching article with ID:', id);
       try {
-        // Log the full URL for debugging
-        const apiUrl = `http://localhost:5001/api/news/article/${id}`;
+        // Use relative URL for production compatibility
+        const apiUrl = `/api/news/article/${id}`;
         console.log('API URL:', apiUrl);
 
         // Add a timestamp to prevent caching
@@ -60,7 +60,7 @@ function SummaryView({ writingStyle: globalWritingStyle }) {
   const regeneratePerspectives = async (articleData, style) => {
     setRegenerating(true);
     try {
-      const apiUrl = `http://localhost:5001/api/news/regenerate/${id}`;
+      const apiUrl = `/api/news/regenerate/${id}`;
       const response = await axios.post(apiUrl, {
         writingStyle: style
       }, {

@@ -23,8 +23,8 @@ function App() {
     setLoading(true);
     try {
       console.log(`Fetching articles for category: ${category}`);
-      // Use the local backend URL for development
-      const apiUrl = `http://localhost:5001/api/news/headlines?category=${category}`;
+      // Use relative URL for production compatibility
+      const apiUrl = `/api/news/headlines?category=${category}`;
       const response = await axios.get(apiUrl, {
         headers: {
           'Content-Type': 'application/json',
@@ -58,8 +58,8 @@ function App() {
     setLoading(true);
     try {
       console.log(`Fetching local news for zip code: ${zipCode}`);
-      // Use the local backend URL for development
-      const apiUrl = `http://localhost:5001/api/news/local/${zipCode}`;
+      // Use relative URL for production compatibility
+      const apiUrl = `/api/news/local/${zipCode}`;
       const response = await axios.get(apiUrl, {
         headers: {
           'Content-Type': 'application/json',
