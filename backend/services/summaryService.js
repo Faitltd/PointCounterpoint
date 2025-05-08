@@ -72,6 +72,9 @@ Produce three sections:
    • Focus only on the key facts and context of the story.
    • Do NOT reference any opposing viewpoints in this section.
    • This should be a straightforward summary of what happened.
+   • Do NOT use markdown symbols like asterisks (*) or hash symbols (#).
+   • Do NOT include the term "TLDR" or "TL;DR" anywhere.
+   • Do NOT mention bias or point of view.
 
 2. Point
    • Start with a provocative, attention-grabbing title (3-5 words) that captures this perspective.
@@ -80,6 +83,9 @@ Produce three sections:
    • Include at least one citation to a source outside the article that would support this view.
    • This should represent one reasonable interpretation or viewpoint on the issue.
    • Do NOT default to political points of view unless the article is explicitly political.
+   • Do NOT use markdown symbols like asterisks (*) or hash symbols (#).
+   • Do NOT include the term "TLDR" or "TL;DR" anywhere.
+   • Do NOT explicitly reference "liberal" or "conservative" perspectives.
 
 3. Counterpoint
    • Start with a provocative, attention-grabbing title (3-5 words) that captures this opposing perspective.
@@ -87,7 +93,10 @@ Produce three sections:
    • Then provide a paragraph explaining this opposing perspective on the issue.
    • Include at least one citation to a source outside the article that would support this view.
    • This should represent an opposing interpretation or viewpoint to the Point section.
-   • Do NOT default to political points of view unless the article is explicitly political.`;
+   • Do NOT default to political points of view unless the article is explicitly political.
+   • Do NOT use markdown symbols like asterisks (*) or hash symbols (#).
+   • Do NOT include the term "TLDR" or "TL;DR" anywhere.
+   • Do NOT explicitly reference "liberal" or "conservative" perspectives.`;
 
     // Add writing style instructions based on the selected style
     let styleInstructions = '';
@@ -345,8 +354,45 @@ const parseOpposingViewsResponse = (response) => {
     console.log('Generated default counterpoint content');
   }
 
+  // Clean up the content - remove markdown symbols and TLDR references
+  result.neutral = cleanContent(result.neutral);
+  result.point = cleanContent(result.point);
+  result.counterpoint = cleanContent(result.counterpoint);
+  result.pointTitle = cleanContent(result.pointTitle);
+  result.counterpointTitle = cleanContent(result.counterpointTitle);
+
   console.log('Final parsed result:', result);
   return result;
+};
+
+/**
+ * Clean content by removing markdown symbols and TLDR references
+ * @param {string} content - The content to clean
+ * @returns {string} - The cleaned content
+ */
+const cleanContent = (content) => {
+  if (!content) return content;
+
+  // Remove markdown symbols (* and #)
+  let cleaned = content.replace(/[*#]/g, '');
+
+  // Remove TLDR references
+  cleaned = cleaned.replace(/\bTLDR\b:?/gi, '').replace(/\bTL;DR\b:?/gi, '');
+
+  // Remove any "In summary" or similar phrases that might be used instead of TLDR
+  cleaned = cleaned.replace(/^In summary:?\s*/i, '');
+  cleaned = cleaned.replace(/^To summarize:?\s*/i, '');
+
+  // Remove any references to liberal or conservative perspectives
+  cleaned = cleaned.replace(/\b(liberal|conservative)\s+(perspective|view|viewpoint|opinion|stance)\b/gi, 'perspective');
+
+  // Remove any references to "point of view" or "bias"
+  cleaned = cleaned.replace(/\b(point of view|bias|biased)\b/gi, 'perspective');
+
+  // Trim any extra whitespace
+  cleaned = cleaned.trim();
+
+  return cleaned;
 };
 
 module.exports = { generateSummaries, generateDetailedPerspectives };
