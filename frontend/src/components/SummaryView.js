@@ -16,8 +16,9 @@ function SummaryView({ writingStyle: globalWritingStyle }) {
     const fetchArticle = async () => {
       console.log('Fetching article with ID:', id);
       try {
-        // Use relative URL for production compatibility
-        const apiUrl = `/api/news/article/${id}`;
+        // Use direct backend URL for production to bypass proxy issues
+        const backendUrl = 'https://pointcounterpoint-backend-526297187726.us-central1.run.app';
+        const apiUrl = `${backendUrl}/api/news/article/${id}`;
         console.log('API URL:', apiUrl);
 
         // Add a timestamp to prevent caching
@@ -60,7 +61,9 @@ function SummaryView({ writingStyle: globalWritingStyle }) {
   const regeneratePerspectives = async (articleData, style) => {
     setRegenerating(true);
     try {
-      const apiUrl = `/api/news/regenerate/${id}`;
+      // Use direct backend URL for production to bypass proxy issues
+      const backendUrl = 'https://pointcounterpoint-backend-526297187726.us-central1.run.app';
+      const apiUrl = `${backendUrl}/api/news/regenerate/${id}`;
       const response = await axios.post(apiUrl, {
         writingStyle: style
       }, {

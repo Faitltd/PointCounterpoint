@@ -23,8 +23,11 @@ function App() {
     setLoading(true);
     try {
       console.log(`Fetching articles for category: ${category}`);
-      // Use relative URL for production compatibility
-      const apiUrl = `/api/news/headlines?category=${category}`;
+
+      // Use direct backend URL for production to bypass proxy issues
+      const backendUrl = 'https://pointcounterpoint-backend-526297187726.us-central1.run.app';
+      const apiUrl = `${backendUrl}/api/news/headlines?category=${category}`;
+
       const response = await axios.get(apiUrl, {
         headers: {
           'Content-Type': 'application/json',
@@ -39,6 +42,9 @@ function App() {
       console.error('Error fetching articles:', err);
       console.error('Error details:', err.message, err.response?.status, err.response?.data);
       setError('Failed to load articles. Please try again later.');
+
+      // Fallback to empty array to prevent UI from being stuck in loading state
+      setArticles([]);
     } finally {
       setLoading(false);
     }
@@ -58,8 +64,11 @@ function App() {
     setLoading(true);
     try {
       console.log(`Fetching local news for zip code: ${zipCode}`);
-      // Use relative URL for production compatibility
-      const apiUrl = `/api/news/local/${zipCode}`;
+
+      // Use direct backend URL for production to bypass proxy issues
+      const backendUrl = 'https://pointcounterpoint-backend-526297187726.us-central1.run.app';
+      const apiUrl = `${backendUrl}/api/news/local/${zipCode}`;
+
       const response = await axios.get(apiUrl, {
         headers: {
           'Content-Type': 'application/json',
@@ -74,6 +83,9 @@ function App() {
       console.error('Error fetching local news:', err);
       console.error('Error details:', err.message, err.response?.status, err.response?.data);
       setError('Failed to load local news. Please try again later.');
+
+      // Fallback to empty array to prevent UI from being stuck in loading state
+      setArticles([]);
     } finally {
       setLoading(false);
     }
