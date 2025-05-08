@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import ZipCodeInput from './ZipCodeInput';
+import ZipCodeInput from './ZipCodeInput.js';
 
 function NavBar({ onCategoryChange, currentCategory = 'general', onZipCodeSubmit }) {
   const navigate = useNavigate();
