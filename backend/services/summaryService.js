@@ -399,4 +399,89 @@ const cleanContent = (content) => {
   return cleaned;
 };
 
-module.exports = { generateSummaries, generateDetailedPerspectives };
+/**
+ * Generate local news articles based on a zip code using ChatGPT
+ * @param {string} zipCode - The zip code to generate local news for
+ * @param {number} count - Number of articles to generate (default: 5)
+ * @returns {Promise<Array>} - Array of generated local news articles
+ */
+const generateLocalNews = async (zipCode, count = 5) => {
+  try {
+    console.log(`Generating local news for zip code: ${zipCode}`);
+
+    // Check if OpenAI API key is valid
+    if (!process.env.OPENAI_API_KEY) {
+      console.log('No OpenAI API key found. Using fallback local news.');
+      return [];
+    }
+
+    const systemPrompt = `You are a local news generator. You will be given a zip code, and your task is to generate ${count} realistic local news articles that could plausibly be happening in that location right now.
+
+For each article, include:
+1. A headline (realistic, not sensational)
+2. A brief content summary (2-3 sentences)
+3. A source name (local newspaper or news station)
+4. A URL (fictional but realistic)
+
+Format your response as a valid JSON array with the following structure for each article:
+[
+  {
+    "title": "Headline of the article",
+    "content": "Brief summary of the article content",
+    "source": {
+      "name": "Local News Source Name",
+      "url": "https://example-local-news.com/article"
+    },
+    "url": "https://example-local-news.com/article/specific-story",
+    "publishedAt": "current date in ISO format"
+  },
+  ...
+]
+
+Make the articles diverse in topic (local government, community events, business, education, etc.) and realistic for the specific geographic area of the zip code. Research the zip code to understand what city/town it's in and what would be relevant local news there.`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `Generate ${count} local news articles for zip code ${zipCode}.` }
+      ],
+      max_tokens: 2000,
+      temperature: 0.7
+    });
+
+    const content = response.choices[0].message.content.trim();
+    console.log('Generated local news content:', content);
+
+    try {
+      // Parse the JSON response
+      const articles = JSON.parse(content);
+
+      // Ensure we have the right format and add any missing fields
+      const formattedArticles = articles.map((article, index) => ({
+        _id: `local-gpt-${Date.now()}-${index}`,
+        title: article.title || `Local News for ${zipCode}`,
+        content: article.content || 'No content available',
+        source: {
+          name: article.source?.name || `${zipCode} Local News`,
+          url: article.source?.url || 'https://example.com/local'
+        },
+        url: article.url || `https://example.com/local/${zipCode}/${index}`,
+        publishedAt: new Date(article.publishedAt || Date.now()),
+        category: 'local',
+        perspectives: []
+      }));
+
+      return formattedArticles.slice(0, count);
+    } catch (parseError) {
+      console.error('Error parsing ChatGPT response:', parseError);
+      console.log('Raw response:', content);
+      return [];
+    }
+  } catch (error) {
+    console.error('Error generating local news with ChatGPT:', error);
+    return [];
+  }
+};
+
+module.exports = { generateSummaries, generateDetailedPerspectives, generateLocalNews };
