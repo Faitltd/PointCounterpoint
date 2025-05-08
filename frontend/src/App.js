@@ -28,6 +28,9 @@ function App() {
       const apiUrl = `${backendUrl}/api/news/headlines?category=${category}`;
 
       const response = await axios.get(apiUrl, {
+        params: {
+          writingStyle: globalWritingStyle
+        },
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
@@ -69,6 +72,9 @@ function App() {
       const apiUrl = `${backendUrl}/api/news/local/${zipCode}`;
 
       const response = await axios.get(apiUrl, {
+        params: {
+          writingStyle: globalWritingStyle
+        },
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'

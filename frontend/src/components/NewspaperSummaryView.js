@@ -33,9 +33,12 @@ function NewspaperSummaryView({ writingStyle: globalWritingStyle, onCategoryChan
         const apiUrl = `${backendUrl}/api/news/article/${id}`;
         console.log('API URL:', apiUrl);
 
-        // Add a timestamp to prevent caching
+        // Add a timestamp to prevent caching and include writing style
         const response = await axios.get(apiUrl, {
-          params: { _t: new Date().getTime() },
+          params: {
+            _t: new Date().getTime(),
+            writingStyle: globalWritingStyle
+          },
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
@@ -48,11 +51,8 @@ function NewspaperSummaryView({ writingStyle: globalWritingStyle, onCategoryChan
         setArticle(response.data);
         setError(null);
 
-        // If we have a global writing style that's not standard, regenerate perspectives
-        if (globalWritingStyle !== 'standard') {
-          console.log(`Using global writing style: ${globalWritingStyle}`);
-          regeneratePerspectives(response.data, globalWritingStyle);
-        }
+        // Writing style is now applied in the initial request
+        console.log(`Article fetched with writing style: ${globalWritingStyle}`);
       } catch (err) {
         console.error('Error fetching article:', err);
         console.error('Error details:', err.message, err.response?.status, err.response?.data);
@@ -63,7 +63,7 @@ function NewspaperSummaryView({ writingStyle: globalWritingStyle, onCategoryChan
     };
 
     fetchArticle();
-  }, [id, globalWritingStyle]);
+  }, [id]);
 
   const regeneratePerspectives = async (articleData, style) => {
     console.log('Starting perspective generation with style:', style);

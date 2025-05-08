@@ -160,8 +160,9 @@ const handleError = (error, fallbackData) => {
 // Get headlines by category
 router.get('/headlines', async (req, res) => {
   try {
-    const { category = 'general' } = req.query;
+    const { category = 'general', writingStyle = 'standard' } = req.query;
     console.log(`Received request for headlines in category: ${category}`);
+    console.log(`Using writing style: ${writingStyle}`);
 
     try {
       // First try to get articles from Supabase
@@ -253,6 +254,9 @@ router.get('/article/:id', async (req, res) => {
   try {
     let article;
     const id = req.params.id;
+    const writingStyle = req.query.writingStyle || 'standard';
+
+    console.log(`Article request with writing style: ${writingStyle}`);
 
     // HARD-CODED TEST ARTICLE ID TO EXCLUDE
     const TEST_ARTICLE_ID = 'dfe323d2-e241-4cac-8714-a4d1051e538e';
@@ -274,9 +278,9 @@ router.get('/article/:id', async (req, res) => {
         console.log('Article found in Supabase');
 
         // Check if the article has perspectives
-        if (!article.perspectives || article.perspectives.length === 0) {
-          console.log('Generating perspectives for article...');
-          await generateAndSavePerspectives(article);
+        if (!article.perspectives || article.perspectives.length === 0 || writingStyle !== 'standard') {
+          console.log(`Generating perspectives for article with style: ${writingStyle}...`);
+          await generateAndSavePerspectives(article, writingStyle);
         }
 
         return res.json(article);
@@ -313,7 +317,7 @@ router.get('/article/:id', async (req, res) => {
 
           // Generate perspectives
           if (savedArticle) {
-            await generateAndSavePerspectives(savedArticle);
+            await generateAndSavePerspectives(savedArticle, writingStyle);
             return res.json(savedArticle);
           }
         }
@@ -332,8 +336,8 @@ router.get('/article/:id', async (req, res) => {
     }
 
     // Check if the sample article has perspectives
-    if (!article.perspectives || article.perspectives.length === 0) {
-      await generateAndSavePerspectives(article);
+    if (!article.perspectives || article.perspectives.length === 0 || writingStyle !== 'standard') {
+      await generateAndSavePerspectives(article, writingStyle);
     }
 
     return res.json(article);
@@ -344,14 +348,16 @@ router.get('/article/:id', async (req, res) => {
 });
 
 // Helper function to generate and save perspectives
-async function generateAndSavePerspectives(article) {
+async function generateAndSavePerspectives(article, writingStyle = 'standard') {
   try {
     console.log('Starting to generate perspectives for article:', article.title);
+    console.log('Using writing style:', writingStyle);
 
-    // Generate perspectives for the article
+    // Generate perspectives for the article with the specified writing style
     const perspectives = await generateDetailedPerspectives(
       article.title,
-      article.content || 'No content available'
+      article.content || 'No content available',
+      writingStyle
     );
 
     console.log('Perspectives generated successfully:', perspectives ? 'Yes' : 'No');
@@ -522,7 +528,9 @@ router.delete('/article/:id', async (req, res) => {
 router.get('/local/:zipCode', async (req, res) => {
   try {
     const { zipCode } = req.params;
+    const writingStyle = req.query.writingStyle || 'standard';
     console.log(`Received request for local news with zip code: ${zipCode}`);
+    console.log(`Using writing style: ${writingStyle}`);
 
     // Validate zip code (basic US zip code validation)
     if (!/^\d{5}(-\d{4})?$/.test(zipCode)) {
@@ -559,7 +567,7 @@ router.get('/local/:zipCode', async (req, res) => {
 
             // Generate perspectives for the article
             console.log('Generating perspectives for local article:', savedArticle.title);
-            await generateAndSavePerspectives(savedArticle);
+            await generateAndSavePerspectives(savedArticle, writingStyle);
 
             // Add the article with perspectives to our result array
             articlesWithPerspectives.push(savedArticle);
