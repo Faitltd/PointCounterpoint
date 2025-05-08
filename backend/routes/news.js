@@ -356,60 +356,75 @@ async function generateAndSavePerspectives(article) {
 
     console.log('Perspectives generated successfully:', perspectives ? 'Yes' : 'No');
 
-    // Check if we have the new perspective format or the old one
-    if (perspectives.perspective1 !== undefined) {
-      // New format with opposing views
-      const perspectivesArray = [
+    // Check which format of perspectives we have
+    let perspectivesArray;
+
+    // Check for point/counterpoint format (newest format)
+    if (perspectives.point !== undefined) {
+      console.log('Using point/counterpoint format');
+      perspectivesArray = [
+        {
+          viewpoint: 'point',
+          summary: perspectives.point,
+          pointTitle: perspectives.pointTitle || ''
+        },
+        {
+          viewpoint: 'counterpoint',
+          summary: perspectives.counterpoint,
+          counterpointTitle: perspectives.counterpointTitle || ''
+        },
+        {
+          viewpoint: 'neutral',
+          summary: perspectives.neutral
+        }
+      ];
+    }
+    // Check for perspective1/perspective2 format (middle format)
+    else if (perspectives.perspective1 !== undefined) {
+      console.log('Using perspective1/perspective2 format');
+      perspectivesArray = [
         { viewpoint: 'perspective1', summary: perspectives.perspective1 },
         { viewpoint: 'perspective2', summary: perspectives.perspective2 },
         { viewpoint: 'neutral', summary: perspectives.neutral }
       ];
-
-      // Add perspectives to the article object
-      article.perspectives = perspectivesArray;
-      console.log('Added opposing perspectives to article object:', perspectivesArray.length);
-
-      // Save perspectives to Supabase if the article has an ID
-      if (article.id) {
-        try {
-          console.log('Saving perspectives to Supabase for article ID:', article.id);
-          await savePerspectives(article.id, perspectivesArray);
-          console.log('Perspectives saved to Supabase successfully');
-        } catch (saveError) {
-          console.error('Error saving perspectives to Supabase:', saveError);
-        }
-      } else {
-        console.log('No article ID found, skipping Supabase save');
-      }
-
-      return perspectivesArray;
-    } else {
-      // Old format with liberal/conservative views (for backward compatibility)
-      const perspectivesArray = [
+    }
+    // Check for liberal/conservative format (oldest format)
+    else if (perspectives.liberal !== undefined) {
+      console.log('Using liberal/conservative format');
+      perspectivesArray = [
         { viewpoint: 'perspective1', summary: perspectives.liberal || 'First perspective could not be generated.' },
         { viewpoint: 'perspective2', summary: perspectives.conservative || 'Second perspective could not be generated.' },
         { viewpoint: 'neutral', summary: perspectives.neutral || 'Neutral analysis could not be generated.' }
       ];
-
-      // Add perspectives to the article object
-      article.perspectives = perspectivesArray;
-      console.log('Added perspectives to article object (converted from old format):', perspectivesArray.length);
-
-      // Save perspectives to Supabase if the article has an ID
-      if (article.id) {
-        try {
-          console.log('Saving perspectives to Supabase for article ID:', article.id);
-          await savePerspectives(article.id, perspectivesArray);
-          console.log('Perspectives saved to Supabase successfully');
-        } catch (saveError) {
-          console.error('Error saving perspectives to Supabase:', saveError);
-        }
-      } else {
-        console.log('No article ID found, skipping Supabase save');
-      }
-
-      return perspectivesArray;
     }
+    // Default fallback if no recognized format
+    else {
+      console.log('No recognized perspective format, using fallback');
+      perspectivesArray = [
+        { viewpoint: 'point', summary: 'Point perspective could not be generated.' },
+        { viewpoint: 'counterpoint', summary: 'Counterpoint perspective could not be generated.' },
+        { viewpoint: 'neutral', summary: perspectives.neutral || 'Neutral analysis could not be generated.' }
+      ];
+    }
+
+    // Add perspectives to the article object
+    article.perspectives = perspectivesArray;
+    console.log('Added perspectives to article object:', perspectivesArray.length);
+
+    // Save perspectives to Supabase if the article has an ID
+    if (article.id) {
+      try {
+        console.log('Saving perspectives to Supabase for article ID:', article.id);
+        await savePerspectives(article.id, perspectivesArray);
+        console.log('Perspectives saved to Supabase successfully');
+      } catch (saveError) {
+        console.error('Error saving perspectives to Supabase:', saveError);
+      }
+    } else {
+      console.log('No article ID found, skipping Supabase save');
+    }
+
+    return perspectivesArray;
   } catch (error) {
     console.error('Error generating perspectives:', error);
 
