@@ -71,6 +71,7 @@ function NewspaperSummaryView({ writingStyle: globalWritingStyle }) {
       setArticle(response.data);
     } catch (err) {
       console.error('Error regenerating perspectives:', err);
+      console.error('Error details:', err.message, err.response?.status, err.response?.data);
       setError('Failed to regenerate perspectives. Please try again later.');
     } finally {
       setRegenerating(false);
@@ -169,19 +170,21 @@ function NewspaperSummaryView({ writingStyle: globalWritingStyle }) {
         </div>
       </div>
 
+      {/* Generate Perspectives Button - Shown when perspectives are missing */}
+      {(!pointPerspective || !counterpointPerspective) && (
+        <button
+          className="regenerate-button"
+          onClick={() => regeneratePerspectives(article, globalWritingStyle)}
+          disabled={regenerating}
+        >
+          {regenerating ? 'Generating Perspectives...' : 'Generate Point/Counterpoint Perspectives'}
+        </button>
+      )}
+
       <div className="newspaper-footer">
         <a href={article.url} target="_blank" rel="noopener noreferrer" className="view-button">
           Read Original Article
         </a>
-        {!pointPerspective || !counterpointPerspective ? (
-          <button
-            className="regenerate-button"
-            onClick={() => regeneratePerspectives(article, globalWritingStyle)}
-            disabled={regenerating}
-          >
-            {regenerating ? 'Generating Perspectives...' : 'Generate Perspectives'}
-          </button>
-        ) : null}
       </div>
     </div>
   );

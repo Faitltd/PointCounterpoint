@@ -1,6 +1,12 @@
 /* Newspaper View Styles */
 body {
   background-color: #e8e8e8;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
 }
 
 .newspaper-view {
@@ -14,6 +20,10 @@ body {
   color: #333;
   position: relative;
   overflow: hidden;
+  /* Center the article on the page */
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* Add a subtle aged paper effect */
@@ -207,25 +217,32 @@ body {
 
 .regenerate-button {
   display: inline-block;
-  background-color: #555;
+  background-color: #d32f2f;
   color: #fff;
-  padding: 8px 16px;
+  padding: 10px 20px;
   text-decoration: none;
-  font-size: 14px;
+  font-size: 16px;
+  font-weight: bold;
   border-radius: 4px;
-  transition: background-color 0.3s;
-  margin-left: 15px;
+  transition: all 0.3s;
+  margin: 20px auto;
   border: none;
   cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  display: block;
 }
 
 .regenerate-button:hover {
-  background-color: #777;
+  background-color: #b71c1c;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
 }
 
 .regenerate-button:disabled {
   background-color: #999;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .regenerating-message {
