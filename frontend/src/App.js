@@ -6,7 +6,7 @@ import './modern-theme.css'; // Import our modern theme
 // Components
 import NavBar from './components/NavBar.js';
 import ArticleList from './components/ArticleList.js';
-import SummaryView from './components/SummaryView.js';
+import NewspaperSummaryView from './components/NewspaperSummaryView.js';
 
 function App() {
   const [articles, setArticles] = useState([]);
@@ -117,7 +117,7 @@ function App() {
             />
             <Route
               path="/article/:id"
-              element={<SummaryView
+              element={<NewspaperSummaryView
                 writingStyle={globalWritingStyle}
               />}
             />
