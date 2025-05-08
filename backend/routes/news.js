@@ -520,10 +520,13 @@ router.get('/local/:zipCode', async (req, res) => {
       const localArticles = await fetchLocalNews(zipCode, 5);
       console.log(`Retrieved ${localArticles.length} local articles`);
 
-      // Save the local articles to Supabase for future use
-      console.log('Saving local articles to Supabase...');
+      // Save the local articles to Supabase and generate perspectives for them
+      console.log('Saving local articles to Supabase and generating perspectives...');
+      const articlesWithPerspectives = [];
+
       for (const article of localArticles) {
         try {
+          // Save the article to Supabase
           const savedArticle = await saveArticle({
             title: article.title,
             content: article.content,
@@ -535,13 +538,28 @@ router.get('/local/:zipCode', async (req, res) => {
             publishedAt: article.publishedAt,
             category: 'local'
           });
-          console.log('Saved local article to Supabase:', savedArticle?.id);
+
+          if (savedArticle && savedArticle.id) {
+            console.log('Saved local article to Supabase:', savedArticle.id);
+
+            // Generate perspectives for the article
+            console.log('Generating perspectives for local article:', savedArticle.title);
+            await generateAndSavePerspectives(savedArticle);
+
+            // Add the article with perspectives to our result array
+            articlesWithPerspectives.push(savedArticle);
+          } else {
+            // If saving failed, still include the original article
+            articlesWithPerspectives.push(article);
+          }
         } catch (saveError) {
           console.error('Error saving local article to Supabase:', saveError);
+          // If there was an error, still include the original article
+          articlesWithPerspectives.push(article);
         }
       }
 
-      return res.json(localArticles);
+      return res.json(articlesWithPerspectives.length > 0 ? articlesWithPerspectives : localArticles);
     } catch (apiError) {
       console.error('Error fetching local news:', apiError);
 

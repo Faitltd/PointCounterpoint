@@ -436,9 +436,11 @@ const generateLocalNews = async (zipCode, count = 5) => {
     console.log(`Zip code ${zipCode} corresponds to: ${locationInfo}`);
 
     // Now, ask ChatGPT to search for real news articles about this location
-    const systemPrompt = `You are a local news researcher. You will be given a location, and your task is to search for ${count} REAL, CURRENT news articles about this location.
+    const systemPrompt = `You are a local news researcher with access to current news databases. You will be given a location, and your task is to search for ${count} REAL, CURRENT news articles about this location.
 
-These must be REAL articles that actually exist, not fictional or generated content. Use your knowledge of current events to find articles that would be published by legitimate news sources.
+IMPORTANT: These MUST be REAL articles that actually exist from legitimate news sources, NOT fictional or AI-generated content. Use your knowledge of current events to find ACTUAL news stories that have been published about this location recently.
+
+DO NOT make up articles or sources. If you don't know of specific articles, use general knowledge to identify what would be the most likely real news stories from that location based on recent events.
 
 For each article, include:
 1. A headline (the actual headline of the real article)
@@ -478,9 +480,15 @@ Focus on diverse topics (local government, community events, business, education
 
     try {
       // Clean up the content if it contains markdown code blocks
-      if (content.startsWith('```') && content.endsWith('```')) {
-        // Remove the markdown code block markers
-        content = content.replace(/^```json\s*/, '').replace(/```$/, '');
+      if (content.includes('```')) {
+        // Extract content between ```json and ``` markers
+        const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+        if (jsonMatch && jsonMatch[1]) {
+          content = jsonMatch[1].trim();
+        } else {
+          // If no match found but there are backticks, try to remove them
+          content = content.replace(/```json\s*/g, '').replace(/```/g, '');
+        }
       }
 
       // Parse the JSON response
