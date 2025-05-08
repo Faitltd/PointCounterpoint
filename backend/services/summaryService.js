@@ -84,7 +84,7 @@ Produce three sections:
    • This should represent one reasonable interpretation or viewpoint on the issue.
    • Do NOT default to political points of view unless the article is explicitly political.
    • Do NOT use markdown symbols like asterisks (*) or hash symbols (#).
-   • Do NOT include the term "TLDR" or "TL;DR" anywhere.
+   • Do NOT include the term "TLDR" or "TL;DR" anywhere - do not state that you are doing a TLDR, simply write that way for any summary segments.
    • Do NOT explicitly reference "liberal" or "conservative" perspectives.
 
 3. Counterpoint
@@ -95,7 +95,7 @@ Produce three sections:
    • This should represent an opposing interpretation or viewpoint to the Point section.
    • Do NOT default to political points of view unless the article is explicitly political.
    • Do NOT use markdown symbols like asterisks (*) or hash symbols (#).
-   • Do NOT include the term "TLDR" or "TL;DR" anywhere.
+   • Do NOT include the term "TLDR" or "TL;DR" anywhere - do not state that you are doing a TLDR, simply write that way for any summary segments.
    • Do NOT explicitly reference "liberal" or "conservative" perspectives.`;
 
     // Add writing style instructions based on the selected style
@@ -382,6 +382,8 @@ const cleanContent = (content) => {
   // Remove any "In summary" or similar phrases that might be used instead of TLDR
   cleaned = cleaned.replace(/^In summary:?\s*/i, '');
   cleaned = cleaned.replace(/^To summarize:?\s*/i, '');
+  cleaned = cleaned.replace(/^Summary:?\s*/i, '');
+  cleaned = cleaned.replace(/^In brief:?\s*/i, '');
 
   // Remove any references to liberal or conservative perspectives
   cleaned = cleaned.replace(/\b(liberal|conservative)\s+(perspective|view|viewpoint|opinion|stance)\b/gi, 'perspective');
