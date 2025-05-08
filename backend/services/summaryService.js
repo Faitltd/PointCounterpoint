@@ -209,6 +209,8 @@ const parseAnalysisResponse = (response) => {
  * @returns {Object} - Object containing the three perspective sections
  */
 const parseOpposingViewsResponse = (response) => {
+  console.log('Parsing response:', response);
+
   // Initialize with empty values
   const result = {
     point: '',
@@ -218,44 +220,132 @@ const parseOpposingViewsResponse = (response) => {
     neutral: ''
   };
 
-  // Try to extract Factual Summary
-  const factualMatch = response.match(/(?:1\.\s*)?Factual Summary:?([\s\S]*?)(?=(?:2\.\s*)?Point|$)/i);
+  // Try to extract Factual Summary - look for section headers or numbers
+  const factualMatch = response.match(/(?:1\.?\s*)?(?:Factual Summary|Summary):?([\s\S]*?)(?=(?:2\.?\s*)?Point|$)/i);
   if (factualMatch && factualMatch[1]) {
     result.neutral = factualMatch[1].trim();
+    console.log('Extracted neutral summary:', result.neutral);
+  } else {
+    // Try alternative pattern for factual summary
+    const altFactualMatch = response.match(/(?:Factual Summary|Summary):([\s\S]*?)(?=Point:|$)/i);
+    if (altFactualMatch && altFactualMatch[1]) {
+      result.neutral = altFactualMatch[1].trim();
+      console.log('Extracted neutral summary (alt):', result.neutral);
+    }
   }
 
-  // Try to extract Point
-  const pointMatch = response.match(/(?:2\.\s*)?Point:?([\s\S]*?)(?=(?:3\.\s*)?Counterpoint|$)/i);
+  // Try to extract Point - look for section headers or numbers
+  const pointMatch = response.match(/(?:2\.?\s*)?Point:?([\s\S]*?)(?=(?:3\.?\s*)?Counterpoint|$)/i);
   if (pointMatch && pointMatch[1]) {
     const pointContent = pointMatch[1].trim();
+    console.log('Extracted point content:', pointContent);
 
     // Extract title if present
     const titleMatch = pointContent.match(/Title:\s*([^\n]+)/i);
     if (titleMatch && titleMatch[1]) {
       result.pointTitle = titleMatch[1].trim();
+      console.log('Extracted point title:', result.pointTitle);
       // Remove the title line from the content
       result.point = pointContent.replace(/Title:\s*[^\n]+\n*/i, '').trim();
     } else {
+      // Try to find a title at the beginning of the point content
+      const firstLineMatch = pointContent.match(/^([^\.]+)\./);
+      if (firstLineMatch && firstLineMatch[1] && firstLineMatch[1].length < 50) {
+        result.pointTitle = firstLineMatch[1].trim();
+        console.log('Extracted point title from first line:', result.pointTitle);
+      }
       result.point = pointContent;
+    }
+  } else {
+    // Try alternative pattern for point
+    const altPointMatch = response.match(/Point:([\s\S]*?)(?=Counterpoint:|$)/i);
+    if (altPointMatch && altPointMatch[1]) {
+      const pointContent = altPointMatch[1].trim();
+      console.log('Extracted point content (alt):', pointContent);
+
+      // Extract title if present
+      const titleMatch = pointContent.match(/Title:\s*([^\n]+)/i);
+      if (titleMatch && titleMatch[1]) {
+        result.pointTitle = titleMatch[1].trim();
+        console.log('Extracted point title (alt):', result.pointTitle);
+        // Remove the title line from the content
+        result.point = pointContent.replace(/Title:\s*[^\n]+\n*/i, '').trim();
+      } else {
+        result.point = pointContent;
+      }
     }
   }
 
-  // Try to extract Counterpoint
-  const counterpointMatch = response.match(/(?:3\.\s*)?Counterpoint:?([\s\S]*?)$/i);
+  // Try to extract Counterpoint - look for section headers or numbers
+  const counterpointMatch = response.match(/(?:3\.?\s*)?Counterpoint:?([\s\S]*?)$/i);
   if (counterpointMatch && counterpointMatch[1]) {
     const counterpointContent = counterpointMatch[1].trim();
+    console.log('Extracted counterpoint content:', counterpointContent);
 
     // Extract title if present
     const titleMatch = counterpointContent.match(/Title:\s*([^\n]+)/i);
     if (titleMatch && titleMatch[1]) {
       result.counterpointTitle = titleMatch[1].trim();
+      console.log('Extracted counterpoint title:', result.counterpointTitle);
       // Remove the title line from the content
       result.counterpoint = counterpointContent.replace(/Title:\s*[^\n]+\n*/i, '').trim();
     } else {
+      // Try to find a title at the beginning of the counterpoint content
+      const firstLineMatch = counterpointContent.match(/^([^\.]+)\./);
+      if (firstLineMatch && firstLineMatch[1] && firstLineMatch[1].length < 50) {
+        result.counterpointTitle = firstLineMatch[1].trim();
+        console.log('Extracted counterpoint title from first line:', result.counterpointTitle);
+      }
       result.counterpoint = counterpointContent;
+    }
+  } else {
+    // Try alternative pattern for counterpoint
+    const altCounterpointMatch = response.match(/Counterpoint:([\s\S]*?)$/i);
+    if (altCounterpointMatch && altCounterpointMatch[1]) {
+      const counterpointContent = altCounterpointMatch[1].trim();
+      console.log('Extracted counterpoint content (alt):', counterpointContent);
+
+      // Extract title if present
+      const titleMatch = counterpointContent.match(/Title:\s*([^\n]+)/i);
+      if (titleMatch && titleMatch[1]) {
+        result.counterpointTitle = titleMatch[1].trim();
+        console.log('Extracted counterpoint title (alt):', result.counterpointTitle);
+        // Remove the title line from the content
+        result.counterpoint = counterpointContent.replace(/Title:\s*[^\n]+\n*/i, '').trim();
+      } else {
+        result.counterpoint = counterpointContent;
+      }
     }
   }
 
+  // If we still don't have titles, generate some based on the content
+  if (!result.pointTitle && result.point) {
+    result.pointTitle = "Key Perspective";
+    console.log('Generated default point title');
+  }
+
+  if (!result.counterpointTitle && result.counterpoint) {
+    result.counterpointTitle = "Alternative View";
+    console.log('Generated default counterpoint title');
+  }
+
+  // Ensure we have all required fields
+  if (!result.neutral) {
+    result.neutral = "The article presents factual information that should be evaluated in context.";
+    console.log('Generated default neutral summary');
+  }
+
+  if (!result.point) {
+    result.point = "This perspective could not be generated. Please try again.";
+    console.log('Generated default point content');
+  }
+
+  if (!result.counterpoint) {
+    result.counterpoint = "This perspective could not be generated. Please try again.";
+    console.log('Generated default counterpoint content');
+  }
+
+  console.log('Final parsed result:', result);
   return result;
 };
 

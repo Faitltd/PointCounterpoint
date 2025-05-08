@@ -16,8 +16,8 @@ function SummaryView({ writingStyle: globalWritingStyle }) {
     const fetchArticle = async () => {
       console.log('Fetching article with ID:', id);
       try {
-        // Use direct backend URL for production to bypass proxy issues
-        const backendUrl = 'https://pointcounterpoint-backend-526297187726.us-central1.run.app';
+        // Use local backend URL for local testing
+        const backendUrl = 'http://localhost:5001';
         const apiUrl = `${backendUrl}/api/news/article/${id}`;
         console.log('API URL:', apiUrl);
 
@@ -61,8 +61,8 @@ function SummaryView({ writingStyle: globalWritingStyle }) {
   const regeneratePerspectives = async (articleData, style) => {
     setRegenerating(true);
     try {
-      // Use direct backend URL for production to bypass proxy issues
-      const backendUrl = 'https://pointcounterpoint-backend-526297187726.us-central1.run.app';
+      // Use local backend URL for local testing
+      const backendUrl = 'http://localhost:5001';
       const apiUrl = `${backendUrl}/api/news/regenerate/${id}`;
       const response = await axios.post(apiUrl, {
         writingStyle: style

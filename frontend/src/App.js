@@ -24,8 +24,8 @@ function App() {
     try {
       console.log(`Fetching articles for category: ${category}`);
 
-      // Use direct backend URL for production to bypass proxy issues
-      const backendUrl = 'https://pointcounterpoint-backend-526297187726.us-central1.run.app';
+      // Use local backend URL for local testing
+      const backendUrl = 'http://localhost:5001';
       const apiUrl = `${backendUrl}/api/news/headlines?category=${category}`;
 
       const response = await axios.get(apiUrl, {
@@ -65,8 +65,8 @@ function App() {
     try {
       console.log(`Fetching local news for zip code: ${zipCode}`);
 
-      // Use direct backend URL for production to bypass proxy issues
-      const backendUrl = 'https://pointcounterpoint-backend-526297187726.us-central1.run.app';
+      // Use local backend URL for local testing
+      const backendUrl = 'http://localhost:5001';
       const apiUrl = `${backendUrl}/api/news/local/${zipCode}`;
 
       const response = await axios.get(apiUrl, {
