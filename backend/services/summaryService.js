@@ -84,7 +84,8 @@ Produce three sections:
    • This should represent one reasonable interpretation or viewpoint on the issue.
    • Do NOT default to political points of view unless the article is explicitly political.
    • Do NOT use markdown symbols like asterisks (*) or hash symbols (#).
-   • Do NOT include the term "TLDR" or "TL;DR" anywhere - do not state that you are doing a TLDR, simply write that way for any summary segments.
+   • IMPORTANT: NEVER start your response with "TLDR" or any variation. Do not mention summaries, briefs, or anything similar.
+   • Write in a concise, direct style but NEVER label it as a summary or TLDR.
    • Do NOT explicitly reference "liberal" or "conservative" perspectives.
 
 3. Counterpoint
@@ -95,7 +96,8 @@ Produce three sections:
    • This should represent an opposing interpretation or viewpoint to the Point section.
    • Do NOT default to political points of view unless the article is explicitly political.
    • Do NOT use markdown symbols like asterisks (*) or hash symbols (#).
-   • Do NOT include the term "TLDR" or "TL;DR" anywhere - do not state that you are doing a TLDR, simply write that way for any summary segments.
+   • IMPORTANT: NEVER start your response with "TLDR" or any variation. Do not mention summaries, briefs, or anything similar.
+   • Write in a concise, direct style but NEVER label it as a summary or TLDR.
    • Do NOT explicitly reference "liberal" or "conservative" perspectives.`;
 
     // Add writing style instructions based on the selected style
