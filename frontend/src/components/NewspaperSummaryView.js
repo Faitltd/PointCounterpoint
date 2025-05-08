@@ -65,6 +65,40 @@ function NewspaperSummaryView({ writingStyle: globalWritingStyle }) {
       console.log('Sending request to:', apiUrl);
       console.log('With payload:', { writingStyle: style || 'default' });
 
+      // Make a direct request to test the API endpoint
+      try {
+        const testResponse = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ writingStyle: style || 'default' }),
+        });
+
+        if (!testResponse.ok) {
+          console.error('Test request failed:', testResponse.status, testResponse.statusText);
+          const errorText = await testResponse.text();
+          console.error('Error response:', errorText);
+        } else {
+          const responseData = await testResponse.json();
+          console.log('Test request successful:', responseData);
+
+          // Update the article with the new perspectives
+          setArticle(responseData);
+
+          // Force a re-render
+          setTimeout(() => {
+            console.log('Forcing re-render after perspective generation');
+            setRegenerating(false);
+          }, 500);
+
+          return;
+        }
+      } catch (testError) {
+        console.error('Test request error:', testError);
+      }
+
+      // If the test request failed, try the original axios request
       const response = await axios.post(apiUrl, {
         writingStyle: style || 'default'
       }, {
