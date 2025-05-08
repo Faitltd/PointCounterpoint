@@ -13,6 +13,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentCategory, setCurrentCategory] = useState('general');
+  const [globalWritingStyle, setGlobalWritingStyle] = useState('standard');
 
   useEffect(() => {
     fetchArticles(currentCategory);
@@ -22,10 +23,8 @@ function App() {
     setLoading(true);
     try {
       console.log(`Fetching articles for category: ${category}`);
-      // Use the full URL with protocol
+      // Use the local backend URL for development
       const apiUrl = `http://localhost:5001/api/news/headlines?category=${category}`;
-      console.log('API URL:', apiUrl);
-
       const response = await axios.get(apiUrl, {
         headers: {
           'Content-Type': 'application/json',
@@ -45,23 +44,70 @@ function App() {
     }
   };
 
+  const handleWritingStyleChange = (style) => {
+    console.log(`Changing global writing style to: ${style}`);
+    setGlobalWritingStyle(style);
+  };
+
   const handleCategoryChange = (category) => {
     setCurrentCategory(category);
   };
 
+  // Handle zip code submission for local news
+  const handleZipCodeSubmit = async (zipCode) => {
+    setLoading(true);
+    try {
+      console.log(`Fetching local news for zip code: ${zipCode}`);
+      // Use the local backend URL for development
+      const apiUrl = `http://localhost:5001/api/news/local/${zipCode}`;
+      const response = await axios.get(apiUrl, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      });
+
+      console.log('Local news API response:', response.data);
+      setArticles(response.data);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching local news:', err);
+      console.error('Error details:', err.message, err.response?.status, err.response?.data);
+      setError('Failed to load local news. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Log the current path for debugging
+  console.log('Current path:', window.location.pathname);
+
   return (
     <Router>
       <div className="app">
-        <NavBar onCategoryChange={handleCategoryChange} currentCategory={currentCategory} />
+        <NavBar
+          onCategoryChange={handleCategoryChange}
+          currentCategory={currentCategory}
+          onZipCodeSubmit={handleZipCodeSubmit}
+        />
         <main className="content">
           <Routes>
             <Route
               path="/"
-              element={<ArticleList articles={articles} loading={loading} error={error} />}
+              element={<ArticleList
+                articles={articles}
+                loading={loading}
+                error={error}
+                onRefresh={() => fetchArticles(currentCategory)}
+                writingStyle={globalWritingStyle}
+                onWritingStyleChange={handleWritingStyleChange}
+              />}
             />
             <Route
               path="/article/:id"
-              element={<SummaryView />}
+              element={<SummaryView
+                writingStyle={globalWritingStyle}
+              />}
             />
           </Routes>
         </main>

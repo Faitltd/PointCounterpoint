@@ -83,7 +83,61 @@ const shuffleArray = (array) => {
   return shuffled;
 };
 
+/**
+ * Fetch local news by zip code
+ * @param {string} zipCode - US zip code to search for local news
+ * @param {number} count - Number of articles to return
+ * @returns {Promise<Array>} - Array of local news articles
+ */
+const fetchLocalNews = async (zipCode, count = 5) => {
+  try {
+    console.log(`Fetching local news for zip code: ${zipCode}`);
+
+    // For NewsAPI, we need to use the everything endpoint with location-based keywords
+    // Since NewsAPI doesn't directly support zip code searches, we'll use the zip code as a keyword
+    const response = await axios.get(`${NEWS_API_URL}/everything`, {
+      params: {
+        q: `${zipCode} OR local`,
+        sortBy: 'publishedAt',
+        language: 'en',
+        apiKey: NEWS_API_KEY,
+        pageSize: 20
+      }
+    });
+
+    if (response.data.status === 'ok' && response.data.articles.length > 0) {
+      console.log(`Retrieved ${response.data.articles.length} local articles from NewsAPI`);
+
+      // Transform the response to match our Article model
+      const articles = response.data.articles.map((article, index) => ({
+        _id: `news-api-local-${Date.now()}-${index}`,
+        title: article.title || 'Untitled Article',
+        source: {
+          name: article.source.name || 'Unknown Source',
+          url: article.url
+        },
+        url: article.url,
+        publishedAt: new Date(article.publishedAt || Date.now()),
+        content: article.content || article.description || 'No content available',
+        category: 'local',
+        // We'll generate perspectives later when the article is viewed
+        perspectives: []
+      }));
+
+      // Return the requested number of articles
+      return articles.slice(0, count);
+    }
+
+    console.log('No local articles found in NewsAPI response');
+    throw new Error('No local articles found');
+  } catch (error) {
+    console.error('Error fetching local news from NewsAPI:', error.message);
+    throw error;
+  }
+};
+
 module.exports = {
   fetchTopHeadlines,
-  getRandomArticles
+  getRandomArticles,
+  fetchLocalNews
 };

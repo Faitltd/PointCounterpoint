@@ -1,7 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { generateDetailedPerspectives } = require('../services/summaryService');
-const { getRandomArticles: getRandomNewsApiArticles } = require('../services/newsApiService');
+const {
+  getRandomArticles: getRandomNewsApiArticles,
+  fetchLocalNews
+} = require('../services/newsApiService');
 const {
   getRandomArticles,
   getArticleById,
@@ -29,16 +32,16 @@ const sampleArticles = [
     category: 'general',
     perspectives: [
       {
-        viewpoint: 'liberal',
-        summary: 'The new climate policy represents a crucial step forward in addressing the urgent climate crisis.'
+        viewpoint: 'perspective1',
+        summary: 'TLDR: The new climate policy is a necessary and effective approach to addressing climate change.\n\nThe new climate policy represents a crucial step forward in addressing the urgent climate crisis. By setting ambitious targets, the government is showing leadership on an issue that requires immediate action. According to the International Climate Institute (2024), policies with similar emission reduction targets have been effective in other countries without significant economic disruption. The combination of incentives and regulations creates a balanced approach that can drive innovation while ensuring accountability.'
       },
       {
-        viewpoint: 'conservative',
-        summary: 'While climate change is a concern, this policy may place undue burden on businesses and could lead to job losses.'
+        viewpoint: 'perspective2',
+        summary: 'TLDR: The climate policy may be too aggressive and could harm economic growth.\n\nWhile climate change is a concern, this policy may place undue burden on businesses and could lead to job losses in key industries. The rapid timeline for implementation doesn\'t allow sufficient transition periods for affected sectors. Research from the Economic Policy Center (2023) suggests that more gradual approaches to emissions reduction can achieve similar environmental outcomes while better protecting economic stability. A more balanced policy might include longer implementation timelines and additional support for affected industries.'
       },
       {
         viewpoint: 'neutral',
-        summary: 'The new policy sets a 50% emissions reduction target by 2030, implementing both renewable energy incentives and carbon taxes.'
+        summary: 'The new policy sets a 50% emissions reduction target by 2030, implementing both renewable energy incentives and carbon taxes. The plan includes specific measures for different sectors of the economy, with particular focus on energy production, transportation, and industrial manufacturing. The policy was developed following consultation with environmental experts, industry representatives, and economic analysts.'
       }
     ]
   },
@@ -55,16 +58,16 @@ const sampleArticles = [
     category: 'technology',
     perspectives: [
       {
-        viewpoint: 'liberal',
-        summary: 'While technological advancement is important, we must ensure AI development includes strong privacy protections.'
+        viewpoint: 'perspective1',
+        summary: 'TLDR: The AI product represents significant technological progress but requires careful oversight.\n\nThis new AI technology represents an important advancement that could transform how businesses operate and analyze data. The efficiency gains could lead to significant productivity improvements across multiple sectors. However, as noted in a recent MIT Technology Review article (2024), robust governance frameworks are essential to ensure these systems are deployed responsibly. The potential benefits must be balanced with appropriate safeguards for data privacy and algorithmic transparency.'
       },
       {
-        viewpoint: 'conservative',
-        summary: 'This innovation demonstrates the power of free market competition to drive technological progress.'
+        viewpoint: 'perspective2',
+        summary: 'TLDR: The AI product raises concerns about job displacement and privacy implications.\n\nWhile technologically impressive, this AI system raises important questions about workforce impacts and data usage. The automation capabilities could potentially eliminate jobs in sectors already facing economic challenges. According to research from the Center for Responsible Technology (2023), similar AI deployments have led to significant workforce disruptions without adequate transition planning. Additionally, the data collection requirements for such systems often create privacy vulnerabilities that may not be immediately apparent.'
       },
       {
         viewpoint: 'neutral',
-        summary: 'The new AI product offers automation capabilities for complex business tasks and data analysis.'
+        summary: 'The new AI product offers automation capabilities for complex business tasks and data analysis. The system uses machine learning algorithms to process large datasets and generate actionable insights. The company claims the technology can reduce processing time by 60% compared to existing solutions and has been tested across multiple industry verticals with consistent results.'
       }
     ]
   },
@@ -238,8 +241,15 @@ router.get('/headlines', async (req, res) => {
   }
 });
 
+// Test endpoint
+router.get('/test', (req, res) => {
+  console.log('Test endpoint called');
+  return res.json({ message: 'Test endpoint working' });
+});
+
 // Get article by ID
 router.get('/article/:id', async (req, res) => {
+  console.log('Article endpoint called with ID:', req.params.id);
   try {
     let article;
     const id = req.params.id;
@@ -336,43 +346,146 @@ router.get('/article/:id', async (req, res) => {
 // Helper function to generate and save perspectives
 async function generateAndSavePerspectives(article) {
   try {
+    console.log('Starting to generate perspectives for article:', article.title);
+
     // Generate perspectives for the article
     const perspectives = await generateDetailedPerspectives(
       article.title,
       article.content || 'No content available'
     );
 
-    // Create perspectives array
-    const perspectivesArray = [
-      { viewpoint: 'liberal', summary: perspectives.liberal },
-      { viewpoint: 'conservative', summary: perspectives.conservative },
-      { viewpoint: 'neutral', summary: perspectives.neutral }
-    ];
+    console.log('Perspectives generated successfully:', perspectives ? 'Yes' : 'No');
 
-    // Add perspectives to the article object
-    article.perspectives = perspectivesArray;
+    // Check if we have the new perspective format or the old one
+    if (perspectives.perspective1 !== undefined) {
+      // New format with opposing views
+      const perspectivesArray = [
+        { viewpoint: 'perspective1', summary: perspectives.perspective1 },
+        { viewpoint: 'perspective2', summary: perspectives.perspective2 },
+        { viewpoint: 'neutral', summary: perspectives.neutral }
+      ];
 
-    // Save perspectives to Supabase if the article has an ID
-    if (article.id) {
-      try {
-        await savePerspectives(article.id, perspectivesArray);
-      } catch (saveError) {
-        console.error('Error saving perspectives to Supabase:', saveError);
+      // Add perspectives to the article object
+      article.perspectives = perspectivesArray;
+      console.log('Added opposing perspectives to article object:', perspectivesArray.length);
+
+      // Save perspectives to Supabase if the article has an ID
+      if (article.id) {
+        try {
+          console.log('Saving perspectives to Supabase for article ID:', article.id);
+          await savePerspectives(article.id, perspectivesArray);
+          console.log('Perspectives saved to Supabase successfully');
+        } catch (saveError) {
+          console.error('Error saving perspectives to Supabase:', saveError);
+        }
+      } else {
+        console.log('No article ID found, skipping Supabase save');
       }
-    }
 
-    return perspectivesArray;
+      return perspectivesArray;
+    } else {
+      // Old format with liberal/conservative views (for backward compatibility)
+      const perspectivesArray = [
+        { viewpoint: 'perspective1', summary: perspectives.liberal || 'First perspective could not be generated.' },
+        { viewpoint: 'perspective2', summary: perspectives.conservative || 'Second perspective could not be generated.' },
+        { viewpoint: 'neutral', summary: perspectives.neutral || 'Neutral analysis could not be generated.' }
+      ];
+
+      // Add perspectives to the article object
+      article.perspectives = perspectivesArray;
+      console.log('Added perspectives to article object (converted from old format):', perspectivesArray.length);
+
+      // Save perspectives to Supabase if the article has an ID
+      if (article.id) {
+        try {
+          console.log('Saving perspectives to Supabase for article ID:', article.id);
+          await savePerspectives(article.id, perspectivesArray);
+          console.log('Perspectives saved to Supabase successfully');
+        } catch (saveError) {
+          console.error('Error saving perspectives to Supabase:', saveError);
+        }
+      } else {
+        console.log('No article ID found, skipping Supabase save');
+      }
+
+      return perspectivesArray;
+    }
   } catch (error) {
     console.error('Error generating perspectives:', error);
 
     // Return default perspectives if generation fails
     return [
-      { viewpoint: 'liberal', summary: 'Liberal perspective could not be generated.' },
-      { viewpoint: 'conservative', summary: 'Conservative perspective could not be generated.' },
+      { viewpoint: 'perspective1', summary: 'First perspective could not be generated.' },
+      { viewpoint: 'perspective2', summary: 'Second perspective could not be generated.' },
       { viewpoint: 'neutral', summary: 'Neutral analysis could not be generated.' }
     ];
   }
 }
+
+// Regenerate perspectives with a specific writing style
+router.post('/regenerate/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    const { writingStyle } = req.body;
+
+    console.log(`Regenerating perspectives for article ID: ${id} with writing style: ${writingStyle}`);
+
+    // Get the article from Supabase
+    let article = await getArticleById(id);
+
+    if (!article) {
+      return res.status(404).json({ message: 'Article not found' });
+    }
+
+    // Generate new perspectives with the specified writing style
+    const perspectives = await generateDetailedPerspectives(
+      article.title,
+      article.content || 'No content available',
+      writingStyle
+    );
+
+    console.log('Perspectives regenerated successfully:', perspectives ? 'Yes' : 'No');
+
+    // Check if we have the new perspective format
+    if (perspectives.point !== undefined) {
+      // New format with point/counterpoint
+      const perspectivesArray = [
+        {
+          viewpoint: 'point',
+          summary: perspectives.point,
+          pointTitle: perspectives.pointTitle || ''
+        },
+        {
+          viewpoint: 'counterpoint',
+          summary: perspectives.counterpoint,
+          counterpointTitle: perspectives.counterpointTitle || ''
+        },
+        {
+          viewpoint: 'neutral',
+          summary: perspectives.neutral
+        }
+      ];
+
+      // Update the article object
+      article.perspectives = perspectivesArray;
+
+      // Save to Supabase
+      if (article.id) {
+        try {
+          await savePerspectives(article.id, perspectivesArray);
+          console.log('Regenerated perspectives saved to Supabase');
+        } catch (saveError) {
+          console.error('Error saving regenerated perspectives:', saveError);
+        }
+      }
+    }
+
+    return res.json(article);
+  } catch (error) {
+    console.error('Error regenerating perspectives:', error);
+    return res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
 
 // Delete article by ID
 router.delete('/article/:id', async (req, res) => {
@@ -387,6 +500,60 @@ router.delete('/article/:id', async (req, res) => {
   } catch (error) {
     console.error('Error deleting article:', error);
     return res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Get local news by zip code
+router.get('/local/:zipCode', async (req, res) => {
+  try {
+    const { zipCode } = req.params;
+    console.log(`Received request for local news with zip code: ${zipCode}`);
+
+    // Validate zip code (basic US zip code validation)
+    if (!/^\d{5}(-\d{4})?$/.test(zipCode)) {
+      return res.status(400).json({ message: 'Invalid zip code format. Please use a 5-digit US zip code.' });
+    }
+
+    try {
+      // Fetch local news from NewsAPI
+      console.log(`Fetching local news for zip code: ${zipCode}`);
+      const localArticles = await fetchLocalNews(zipCode, 5);
+      console.log(`Retrieved ${localArticles.length} local articles`);
+
+      // Save the local articles to Supabase for future use
+      console.log('Saving local articles to Supabase...');
+      for (const article of localArticles) {
+        try {
+          const savedArticle = await saveArticle({
+            title: article.title,
+            content: article.content,
+            source: {
+              name: article.source.name,
+              url: article.source.url
+            },
+            url: article.url,
+            publishedAt: article.publishedAt,
+            category: 'local'
+          });
+          console.log('Saved local article to Supabase:', savedArticle?.id);
+        } catch (saveError) {
+          console.error('Error saving local article to Supabase:', saveError);
+        }
+      }
+
+      return res.json(localArticles);
+    } catch (apiError) {
+      console.error('Error fetching local news:', apiError);
+
+      // Fallback to general news if local news fetch fails
+      console.log('Falling back to general news...');
+      const fallbackArticles = await getRandomNewsApiArticles(5, 'general');
+
+      return res.json(fallbackArticles);
+    }
+  } catch (error) {
+    console.error('Error fetching local news:', error);
+    return res.status(500).json({ message: 'Server error' });
   }
 });
 

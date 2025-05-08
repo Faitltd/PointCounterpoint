@@ -1,12 +1,14 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import ZipCodeInput from './ZipCodeInput';
 
-function NavBar({ onCategoryChange, currentCategory = 'general' }) {
+function NavBar({ onCategoryChange, currentCategory = 'general', onZipCodeSubmit }) {
   const navigate = useNavigate();
   const location = useLocation();
 
   const categories = [
     { id: 'general', name: 'General' },
+    { id: 'local', name: 'Local News' },
     { id: 'politics', name: 'Politics' },
     { id: 'business', name: 'Business' },
     { id: 'technology', name: 'Technology' },
@@ -19,6 +21,14 @@ function NavBar({ onCategoryChange, currentCategory = 'general' }) {
   const handleCategoryClick = (categoryId) => {
     onCategoryChange(categoryId);
 
+    // If we're on a detail page, navigate back to the home page
+    if (location.pathname !== '/') {
+      navigate('/');
+    }
+  };
+
+  // Handle when the Local News category is clicked
+  const handleLocalCategoryClick = () => {
     // If we're on a detail page, navigate back to the home page
     if (location.pathname !== '/') {
       navigate('/');
@@ -44,6 +54,13 @@ function NavBar({ onCategoryChange, currentCategory = 'general' }) {
             </button>
           ))}
         </div>
+
+        {/* Show zip code input when Local News category is selected */}
+        {currentCategory === 'local' && (
+          <div className="local-news-input">
+            <ZipCodeInput onZipCodeSubmit={onZipCodeSubmit} />
+          </div>
+        )}
       </div>
     </nav>
   );
