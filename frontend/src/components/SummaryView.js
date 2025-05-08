@@ -104,6 +104,10 @@ function SummaryView({ writingStyle: globalWritingStyle }) {
   const counterpointPerspective = article.perspectives && article.perspectives.find(p =>
     p.viewpoint === 'counterpoint' || p.viewpoint === 'perspective2' || p.viewpoint === 'conservative');
 
+  // Log perspectives for debugging
+  console.log('Point perspective:', pointPerspective);
+  console.log('Counterpoint perspective:', counterpointPerspective);
+
   return (
     <div className="newspaper-view">
       <div className="newspaper-header">
@@ -126,7 +130,10 @@ function SummaryView({ writingStyle: globalWritingStyle }) {
       <div className="newspaper-columns">
         <div className="newspaper-column">
           <div className="column-content">
-            <h2 className="column-title">{pointPerspective?.pointTitle || 'Point'}</h2>
+            <h2 className="column-title">Point</h2>
+            {pointPerspective && pointPerspective.pointTitle && (
+              <h3 className="column-subtitle">{pointPerspective.pointTitle}</h3>
+            )}
             <div className="column-text">
               {pointPerspective ? formatPerspectiveContent(pointPerspective.summary) : 'No point perspective available.'}
             </div>
@@ -135,7 +142,10 @@ function SummaryView({ writingStyle: globalWritingStyle }) {
 
         <div className="newspaper-column">
           <div className="column-content">
-            <h2 className="column-title">{counterpointPerspective?.counterpointTitle || 'Counterpoint'}</h2>
+            <h2 className="column-title">Counterpoint</h2>
+            {counterpointPerspective && counterpointPerspective.counterpointTitle && (
+              <h3 className="column-subtitle">{counterpointPerspective.counterpointTitle}</h3>
+            )}
             <div className="column-text">
               {counterpointPerspective ? formatPerspectiveContent(counterpointPerspective.summary) : 'No counterpoint perspective available.'}
             </div>
