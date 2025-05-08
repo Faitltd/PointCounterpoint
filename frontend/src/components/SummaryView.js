@@ -110,9 +110,20 @@ function SummaryView({ writingStyle: globalWritingStyle }) {
 
   return (
     <div className="newspaper-view">
+      <h1 className="newspaper-masthead">Point Counterpoint</h1>
+      <div className="newspaper-nav">
+        <Link to="/category/general">General</Link>
+        <Link to="/category/politics">Politics</Link>
+        <Link to="/category/business">Business</Link>
+        <Link to="/category/technology">Technology</Link>
+        <Link to="/category/entertainment">Entertainment</Link>
+        <Link to="/category/sports">Sports</Link>
+        <Link to="/category/science">Science</Link>
+        <Link to="/category/health">Health</Link>
+      </div>
       <div className="newspaper-header">
         <Link to="/" className="back-link">← Back to headlines</Link>
-        <h1 className="newspaper-title">{article.title}</h1>
+        <h2 className="newspaper-title">{article.title}</h2>
         <div className="newspaper-metadata">
           <p className="source">Source: {article.source_name}</p>
           <p className="date">Published: {new Date(article.published_at).toLocaleDateString()}</p>
@@ -157,6 +168,15 @@ function SummaryView({ writingStyle: globalWritingStyle }) {
         <a href={article.url} target="_blank" rel="noopener noreferrer" className="view-button">
           Read Original Article
         </a>
+        {!pointPerspective || !counterpointPerspective ? (
+          <button
+            className="regenerate-button"
+            onClick={() => regeneratePerspectives(article, globalWritingStyle)}
+            disabled={regenerating}
+          >
+            {regenerating ? 'Generating Perspectives...' : 'Generate Perspectives'}
+          </button>
+        ) : null}
       </div>
     </div>
   );
