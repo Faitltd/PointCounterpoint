@@ -58,27 +58,127 @@ const getArticles = async (category = 'general', limit = 10) => {
 };
 
 /**
- * Get a random selection of articles
+ * Get a random selection of articles with rotation to ensure freshness
  * @param {number} count - Number of articles to return
  * @param {string} category - Category of articles
  * @returns {Promise<Array>} - Array of random articles
  */
 const getRandomArticles = async (count = 5, category = 'general') => {
   try {
-    const articles = await getArticles(category, 20);
+    // Calculate date for freshness filter (articles from the last 48 hours)
+    const freshCutoff = new Date();
+    freshCutoff.setHours(freshCutoff.getHours() - 48);
+
+    console.log(`Fetching articles published after: ${freshCutoff.toISOString()}`);
+
+    // Get more articles than needed to allow for filtering and rotation
+    const { data: articles, error } = await supabase
+      .from('articles')
+      .select('*')
+      .eq(category !== 'all' ? 'category' : 'id', category !== 'all' ? category : 'id') // If 'all', use a dummy condition
+      .gte('published_at', freshCutoff.toISOString()) // Only get fresh articles
+      .order('published_at', { ascending: false })
+      .limit(30);
+
+    if (error) throw error;
 
     // Filter out test articles
-    const filteredArticles = articles.filter(article =>
+    const filteredArticles = articles ? articles.filter(article =>
       !(article.title === 'Test Article' && article.source_name === 'Test Source')
-    );
+    ) : [];
 
-    console.log(`Filtered out ${articles.length - filteredArticles.length} test articles`);
+    console.log(`Filtered out ${articles ? articles.length - filteredArticles.length : 0} test articles`);
+    console.log(`Found ${filteredArticles.length} fresh articles for category ${category}`);
 
-    // If we have fewer articles than requested, return all of them
+    // If we don't have enough fresh articles, try getting older ones
+    if (filteredArticles.length < count) {
+      console.log(`Not enough fresh articles, fetching older ones for category ${category}`);
+
+      // Get older articles as fallback
+      const { data: olderArticles, error: olderError } = await supabase
+        .from('articles')
+        .select('*')
+        .eq(category !== 'all' ? 'category' : 'id', category !== 'all' ? category : 'id')
+        .lt('published_at', freshCutoff.toISOString())
+        .order('published_at', { ascending: false })
+        .limit(30);
+
+      if (!olderError && olderArticles) {
+        // Filter out test articles from older ones too
+        const filteredOlderArticles = olderArticles.filter(article =>
+          !(article.title === 'Test Article' && article.source_name === 'Test Source')
+        );
+
+        console.log(`Found ${filteredOlderArticles.length} older articles for category ${category}`);
+
+        // Combine fresh and older articles, prioritizing fresh ones
+        const combinedArticles = [...filteredArticles, ...filteredOlderArticles];
+
+        // If we have fewer articles than requested, return all of them
+        if (combinedArticles.length <= count) return combinedArticles;
+
+        // Otherwise, continue with the combined list
+        filteredArticles.push(...filteredOlderArticles);
+      }
+    }
+
+    // If we still have fewer articles than requested, return all of them
     if (filteredArticles.length <= count) return filteredArticles;
 
-    // Otherwise, shuffle and return the requested count
-    return shuffleArray(filteredArticles).slice(0, count);
+    // Get current timestamp for rotation calculations
+    const now = new Date();
+    const hourOfDay = now.getHours();
+
+    // Create a weighted list based on recency and rotation
+    const weightedArticles = filteredArticles.map(article => {
+      // Calculate article age in hours
+      const publishedAt = new Date(article.published_at);
+      const ageInHours = (now - publishedAt) / (1000 * 60 * 60);
+
+      // Calculate time since last shown (if available)
+      let timeSinceLastShown = Infinity;
+      if (article.last_shown_at) {
+        const lastShown = new Date(article.last_shown_at);
+        timeSinceLastShown = (now - lastShown) / (1000 * 60 * 60);
+      }
+
+      // Calculate a weight based on recency and time since last shown
+      // Higher weight = more likely to be selected
+      let weight = 100;
+
+      // Newer articles get higher weight
+      weight -= Math.min(ageInHours * 2, 50); // Max penalty of 50 for old articles
+
+      // Articles not shown recently get higher weight
+      weight += Math.min(timeSinceLastShown * 5, 50); // Max bonus of 50 for articles not shown recently
+
+      // Add some time-of-day variation to ensure rotation throughout the day
+      // This creates a subtle shift in article selection every hour
+      weight += (hourOfDay % 4) * (article.id.charCodeAt(0) % 10);
+
+      return { ...article, weight };
+    });
+
+    // Sort by weight (highest first) and take the top articles
+    const selectedArticles = weightedArticles
+      .sort((a, b) => b.weight - a.weight)
+      .slice(0, count);
+
+    // Update the last_shown_at timestamp for selected articles if the column exists
+    try {
+      for (const article of selectedArticles) {
+        await supabase
+          .from('articles')
+          .update({ last_shown_at: now.toISOString() })
+          .eq('id', article.id);
+      }
+    } catch (updateError) {
+      // If the column doesn't exist, just log and continue
+      console.log('Note: Unable to update last_shown_at timestamp. Column may not exist in the database schema.');
+    }
+
+    // Shuffle the final selection to add some randomness to the order
+    return shuffleArray(selectedArticles);
   } catch (error) {
     console.error('Error getting random articles:', error);
     throw error;
@@ -149,23 +249,30 @@ const saveArticle = async (article) => {
       return data;
     } else {
       // Insert new article
-      const { data, error } = await supabase
-        .from('articles')
-        .insert({
-          title: article.title,
-          content: article.content,
-          source_name: article.source.name,
-          source_url: article.source.url,
-          url: article.url,
-          published_at: article.publishedAt || new Date(),
-          category: article.category
-        })
-        .select()
-        .single();
+      const articleData = {
+        title: article.title,
+        content: article.content,
+        source_name: article.source.name,
+        source_url: article.source.url,
+        url: article.url,
+        published_at: article.publishedAt || new Date(),
+        category: article.category
+      };
 
-      if (error) throw error;
+      // Try to include last_shown_at if it exists in the schema
+      try {
+        const { data, error } = await supabase
+          .from('articles')
+          .insert(articleData)
+          .select()
+          .single();
 
-      return data;
+        if (error) throw error;
+        return data;
+      } catch (insertError) {
+        console.error('Error saving article to Supabase:', insertError);
+        throw insertError;
+      }
     }
   } catch (error) {
     console.error('Error saving article to Supabase:', error);

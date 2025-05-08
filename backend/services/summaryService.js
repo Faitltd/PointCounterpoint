@@ -436,11 +436,20 @@ const generateLocalNews = async (zipCode, count = 5) => {
     console.log(`Zip code ${zipCode} corresponds to: ${locationInfo}`);
 
     // Now, ask ChatGPT to search for real news articles about this location
-    const systemPrompt = `You are a local news researcher with access to current news databases. You will be given a location, and your task is to search for ${count} REAL, CURRENT news articles about this location.
+    // Get current date for the prompt
+    const currentDate = new Date();
+    const formattedDate = currentDate.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
 
-IMPORTANT: These MUST be REAL articles that actually exist from legitimate news sources, NOT fictional or AI-generated content. Use your knowledge of current events to find ACTUAL news stories that have been published about this location recently.
+    const systemPrompt = `You are a local news researcher with access to current news databases. Today is ${formattedDate}. You will be given a location, and your task is to search for ${count} REAL, CURRENT news articles about this location.
 
-DO NOT make up articles or sources. If you don't know of specific articles, use general knowledge to identify what would be the most likely real news stories from that location based on recent events.
+IMPORTANT: These MUST be REAL articles that actually exist from legitimate news sources, NOT fictional or AI-generated content. Use your knowledge of current events to find ACTUAL news stories that have been published about this location WITHIN THE LAST 24 HOURS.
+
+DO NOT make up articles or sources. If you don't know of specific articles from the last 24 hours, use general knowledge to identify what would be the most likely real news stories from that location based on VERY RECENT events.
 
 For each article, include:
 1. A headline (the actual headline of the real article)
@@ -458,18 +467,18 @@ Format your response as a valid JSON array with the following structure for each
       "url": "https://actual-news-source.com"
     },
     "url": "https://actual-news-source.com/article/specific-story",
-    "publishedAt": "current date in ISO format"
+    "publishedAt": "${currentDate.toISOString()}"
   },
   ...
 ]
 
-Focus on diverse topics (local government, community events, business, education, crime, etc.) that would be relevant to people living in this location. These should be real articles that someone could actually find if they searched for news about this location.`;
+Focus on diverse topics (local government, community events, business, education, crime, etc.) that would be relevant to people living in this location. These should be FRESH, RECENT news stories from the last 24 hours that someone could actually find if they searched for news about this location today.`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: `Search for ${count} real, current news articles about ${locationInfo}.` }
+        { role: "user", content: `Search for ${count} real, FRESH news articles from the LAST 24 HOURS about ${locationInfo}. Only include the most recent stories from today or yesterday.` }
       ],
       max_tokens: 2000,
       temperature: 0.7
