@@ -17,12 +17,32 @@ function NewspaperSummaryView({ writingStyle: globalWritingStyle }) {
       try {
         // Use local backend URL for local testing
         const backendUrl = 'http://localhost:5001';
-        const apiUrl = `${backendUrl}/api/news/${id}`;
-        const response = await axios.get(apiUrl);
-        console.log('Article data:', response.data);
+        const apiUrl = `${backendUrl}/api/news/article/${id}`;
+        console.log('API URL:', apiUrl);
+
+        // Add a timestamp to prevent caching
+        const response = await axios.get(apiUrl, {
+          params: { _t: new Date().getTime() },
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        });
+        console.log('Article data received:', response.data);
+        console.log('Perspectives in response:', response.data.perspectives);
+
+        // Store the article data
         setArticle(response.data);
+        setError(null);
+
+        // If we have a global writing style that's not standard, regenerate perspectives
+        if (globalWritingStyle !== 'standard') {
+          console.log(`Using global writing style: ${globalWritingStyle}`);
+          regeneratePerspectives(response.data, globalWritingStyle);
+        }
       } catch (err) {
         console.error('Error fetching article:', err);
+        console.error('Error details:', err.message, err.response?.status, err.response?.data);
         setError('Failed to load article. Please try again later.');
       } finally {
         setLoading(false);
@@ -30,7 +50,7 @@ function NewspaperSummaryView({ writingStyle: globalWritingStyle }) {
     };
 
     fetchArticle();
-  }, [id]);
+  }, [id, globalWritingStyle]);
 
   const regeneratePerspectives = async (articleData, style) => {
     setRegenerating(true);
@@ -70,7 +90,7 @@ function NewspaperSummaryView({ writingStyle: globalWritingStyle }) {
   // Function to format perspective content
   const formatPerspectiveContent = (content) => {
     if (!content) return 'No perspective available.';
-    
+
     // Split content by paragraphs and wrap each in a <p> tag
     const paragraphs = content.split('\n\n');
     return (
