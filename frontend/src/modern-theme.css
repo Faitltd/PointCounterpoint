@@ -48,6 +48,7 @@ body {
   align-items: center;
   padding: 20px 30px;
   box-sizing: border-box;
+  max-width: 100%;
 }
 
 /* Navigation */

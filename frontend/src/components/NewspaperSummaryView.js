@@ -54,80 +54,58 @@ function NewspaperSummaryView({ writingStyle: globalWritingStyle }) {
 
   const regeneratePerspectives = async (articleData, style) => {
     console.log('Starting perspective generation with style:', style);
-    console.log('Article data:', articleData);
+    console.log('Article ID:', id);
 
     setRegenerating(true);
+
     try {
       // Use local backend URL for local testing
       const backendUrl = 'http://localhost:5001';
       const apiUrl = `${backendUrl}/api/news/regenerate/${id}`;
 
       console.log('Sending request to:', apiUrl);
-      console.log('With payload:', { writingStyle: style || 'default' });
 
-      // Make a direct request to test the API endpoint
-      try {
-        const testResponse = await fetch(apiUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ writingStyle: style || 'default' }),
-        });
-
-        if (!testResponse.ok) {
-          console.error('Test request failed:', testResponse.status, testResponse.statusText);
-          const errorText = await testResponse.text();
-          console.error('Error response:', errorText);
-        } else {
-          const responseData = await testResponse.json();
-          console.log('Test request successful:', responseData);
-
-          // Update the article with the new perspectives
-          setArticle(responseData);
-
-          // Force a re-render
-          setTimeout(() => {
-            console.log('Forcing re-render after perspective generation');
-            setRegenerating(false);
-          }, 500);
-
-          return;
-        }
-      } catch (testError) {
-        console.error('Test request error:', testError);
-      }
-
-      // If the test request failed, try the original axios request
-      const response = await axios.post(apiUrl, {
-        writingStyle: style || 'default'
-      }, {
+      // Use a simple fetch request with the exact format expected by the backend
+      const response = await fetch(apiUrl, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
+        },
+        body: JSON.stringify({
+          writingStyle: style || 'default'
+        }),
       });
 
-      console.log('Regenerated perspectives response:', response);
-      console.log('Regenerated perspectives data:', response.data);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-      if (response.data && response.data.perspectives) {
-        console.log('New perspectives:', response.data.perspectives);
+      const data = await response.json();
+      console.log('Regenerated perspectives response:', data);
+
+      if (data && data.perspectives) {
+        console.log('New perspectives:', data.perspectives);
+
+        // Update the article with the new perspectives
+        setArticle(data);
+
+        // Find the point and counterpoint perspectives again
+        const point = data.perspectives.find(p =>
+          p.viewpoint === 'point' || p.viewpoint === 'perspective1' || p.viewpoint === 'liberal');
+
+        const counterpoint = data.perspectives.find(p =>
+          p.viewpoint === 'counterpoint' || p.viewpoint === 'perspective2' || p.viewpoint === 'conservative');
+
+        console.log('New point perspective:', point);
+        console.log('New counterpoint perspective:', counterpoint);
       } else {
         console.warn('No perspectives found in response data');
       }
-
-      setArticle(response.data);
-
-      // Force a re-render
-      setTimeout(() => {
-        console.log('Forcing re-render after perspective generation');
-        setRegenerating(false);
-      }, 500);
     } catch (err) {
       console.error('Error regenerating perspectives:', err);
-      console.error('Error details:', err.message, err.response?.status, err.response?.data);
       setError('Failed to regenerate perspectives. Please try again later.');
+    } finally {
+      // Always set regenerating to false when done
       setRegenerating(false);
     }
   };
