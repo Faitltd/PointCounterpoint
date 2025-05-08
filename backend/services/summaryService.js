@@ -400,14 +400,14 @@ const cleanContent = (content) => {
 };
 
 /**
- * Generate local news articles based on a zip code using ChatGPT
- * @param {string} zipCode - The zip code to generate local news for
- * @param {number} count - Number of articles to generate (default: 5)
- * @returns {Promise<Array>} - Array of generated local news articles
+ * Search for real local news articles based on a zip code using ChatGPT
+ * @param {string} zipCode - The zip code to search local news for
+ * @param {number} count - Number of articles to return (default: 5)
+ * @returns {Promise<Array>} - Array of real local news articles
  */
 const generateLocalNews = async (zipCode, count = 5) => {
   try {
-    console.log(`Generating local news for zip code: ${zipCode}`);
+    console.log(`Searching for local news for zip code: ${zipCode}`);
 
     // Check if OpenAI API key is valid
     if (!process.env.OPENAI_API_KEY) {
@@ -415,55 +415,84 @@ const generateLocalNews = async (zipCode, count = 5) => {
       return [];
     }
 
-    const systemPrompt = `You are a local news generator. You will be given a zip code, and your task is to generate ${count} realistic local news articles that could plausibly be happening in that location right now.
+    // First, ask ChatGPT to identify the location based on the zip code
+    const locationResponse = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "system",
+          content: "You are a helpful assistant that provides information about geographic locations based on zip codes."
+        },
+        {
+          role: "user",
+          content: `What city, county, and state is zip code ${zipCode} located in? Respond with just the location information in a simple format like "City, County, State".`
+        }
+      ],
+      max_tokens: 100,
+      temperature: 0.3
+    });
+
+    const locationInfo = locationResponse.choices[0].message.content.trim();
+    console.log(`Zip code ${zipCode} corresponds to: ${locationInfo}`);
+
+    // Now, ask ChatGPT to search for real news articles about this location
+    const systemPrompt = `You are a local news researcher. You will be given a location, and your task is to search for ${count} REAL, CURRENT news articles about this location.
+
+These must be REAL articles that actually exist, not fictional or generated content. Use your knowledge of current events to find articles that would be published by legitimate news sources.
 
 For each article, include:
-1. A headline (realistic, not sensational)
-2. A brief content summary (2-3 sentences)
-3. A source name (local newspaper or news station)
-4. A URL (fictional but realistic)
+1. A headline (the actual headline of the real article)
+2. A brief content summary (2-3 sentences describing what the article is about)
+3. A source name (the actual news organization that published the article)
+4. A URL (the actual or likely URL where this article could be found)
 
 Format your response as a valid JSON array with the following structure for each article:
 [
   {
-    "title": "Headline of the article",
-    "content": "Brief summary of the article content",
+    "title": "Actual headline of the real article",
+    "content": "Brief summary of what the article is about",
     "source": {
-      "name": "Local News Source Name",
-      "url": "https://example-local-news.com/article"
+      "name": "Actual News Source Name",
+      "url": "https://actual-news-source.com"
     },
-    "url": "https://example-local-news.com/article/specific-story",
+    "url": "https://actual-news-source.com/article/specific-story",
     "publishedAt": "current date in ISO format"
   },
   ...
 ]
 
-Make the articles diverse in topic (local government, community events, business, education, etc.) and realistic for the specific geographic area of the zip code. Research the zip code to understand what city/town it's in and what would be relevant local news there.`;
+Focus on diverse topics (local government, community events, business, education, crime, etc.) that would be relevant to people living in this location. These should be real articles that someone could actually find if they searched for news about this location.`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: `Generate ${count} local news articles for zip code ${zipCode}.` }
+        { role: "user", content: `Search for ${count} real, current news articles about ${locationInfo}.` }
       ],
       max_tokens: 2000,
       temperature: 0.7
     });
 
-    const content = response.choices[0].message.content.trim();
-    console.log('Generated local news content:', content);
+    let content = response.choices[0].message.content.trim();
+    console.log('Found local news content:', content);
 
     try {
+      // Clean up the content if it contains markdown code blocks
+      if (content.startsWith('```') && content.endsWith('```')) {
+        // Remove the markdown code block markers
+        content = content.replace(/^```json\s*/, '').replace(/```$/, '');
+      }
+
       // Parse the JSON response
       const articles = JSON.parse(content);
 
       // Ensure we have the right format and add any missing fields
       const formattedArticles = articles.map((article, index) => ({
         _id: `local-gpt-${Date.now()}-${index}`,
-        title: article.title || `Local News for ${zipCode}`,
+        title: article.title || `Local News for ${locationInfo}`,
         content: article.content || 'No content available',
         source: {
-          name: article.source?.name || `${zipCode} Local News`,
+          name: article.source?.name || `${locationInfo} News`,
           url: article.source?.url || 'https://example.com/local'
         },
         url: article.url || `https://example.com/local/${zipCode}/${index}`,
@@ -479,7 +508,7 @@ Make the articles diverse in topic (local government, community events, business
       return [];
     }
   } catch (error) {
-    console.error('Error generating local news with ChatGPT:', error);
+    console.error('Error searching for local news with ChatGPT:', error);
     return [];
   }
 };
