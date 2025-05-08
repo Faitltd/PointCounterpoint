@@ -1,15 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import WritingStyleDropdown from './WritingStyleDropdown.js';
 import './NewspaperView.css';
 
-function NewspaperSummaryView({ writingStyle: globalWritingStyle }) {
+function NewspaperSummaryView({ writingStyle: globalWritingStyle, onCategoryChange }) {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [regenerating, setRegenerating] = useState(false);
+
+  const categories = [
+    { id: 'general', name: 'General' },
+    { id: 'local', name: 'Local News' },
+    { id: 'politics', name: 'Politics' },
+    { id: 'business', name: 'Business' },
+    { id: 'technology', name: 'Technology' },
+    { id: 'entertainment', name: 'Entertainment' },
+    { id: 'sports', name: 'Sports' },
+    { id: 'science', name: 'Science' },
+    { id: 'health', name: 'Health' }
+  ];
 
   useEffect(() => {
     const fetchArticle = async () => {
@@ -146,18 +159,33 @@ function NewspaperSummaryView({ writingStyle: globalWritingStyle }) {
   console.log('Point perspective:', pointPerspective);
   console.log('Counterpoint perspective:', counterpointPerspective);
 
+  // Handle category click
+  const handleCategoryClick = (categoryId) => {
+    if (onCategoryChange) {
+      onCategoryChange(categoryId);
+      navigate('/');
+    }
+  };
+
   return (
     <div className="newspaper-view">
       <h1 className="newspaper-masthead">Point Counterpoint</h1>
-      <div className="newspaper-nav">
-        <Link to="/category/general">General</Link>
-        <Link to="/category/politics">Politics</Link>
-        <Link to="/category/business">Business</Link>
-        <Link to="/category/technology">Technology</Link>
-        <Link to="/category/entertainment">Entertainment</Link>
-        <Link to="/category/sports">Sports</Link>
-        <Link to="/category/science">Science</Link>
-        <Link to="/category/health">Health</Link>
+
+      {/* Two-row category navigation */}
+      <div className="newspaper-nav-container">
+        <div className="newspaper-nav newspaper-nav-row-1">
+          <button onClick={() => handleCategoryClick('general')}>General</button>
+          <button onClick={() => handleCategoryClick('local')}>Local News</button>
+          <button onClick={() => handleCategoryClick('politics')}>Politics</button>
+          <button onClick={() => handleCategoryClick('business')}>Business</button>
+        </div>
+        <div className="newspaper-nav newspaper-nav-row-2">
+          <button onClick={() => handleCategoryClick('technology')}>Technology</button>
+          <button onClick={() => handleCategoryClick('entertainment')}>Entertainment</button>
+          <button onClick={() => handleCategoryClick('sports')}>Sports</button>
+          <button onClick={() => handleCategoryClick('science')}>Science</button>
+          <button onClick={() => handleCategoryClick('health')}>Health</button>
+        </div>
       </div>
       <div className="newspaper-header">
         <Link to="/" className="back-link">← Back to headlines</Link>

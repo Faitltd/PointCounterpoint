@@ -4,7 +4,6 @@ import axios from 'axios';
 import './modern-theme.css'; // Import our modern theme
 
 // Components
-import NavBar from './components/NavBar.js';
 import ArticleList from './components/ArticleList.js';
 import NewspaperSummaryView from './components/NewspaperSummaryView.js';
 
@@ -97,11 +96,6 @@ function App() {
   return (
     <Router>
       <div className="app">
-        <NavBar
-          onCategoryChange={handleCategoryChange}
-          currentCategory={currentCategory}
-          onZipCodeSubmit={handleZipCodeSubmit}
-        />
         <main className="content">
           <Routes>
             <Route
@@ -113,12 +107,16 @@ function App() {
                 onRefresh={() => fetchArticles(currentCategory)}
                 writingStyle={globalWritingStyle}
                 onWritingStyleChange={handleWritingStyleChange}
+                onCategoryChange={handleCategoryChange}
+                currentCategory={currentCategory}
+                onZipCodeSubmit={handleZipCodeSubmit}
               />}
             />
             <Route
               path="/article/:id"
               element={<NewspaperSummaryView
                 writingStyle={globalWritingStyle}
+                onCategoryChange={handleCategoryChange}
               />}
             />
           </Routes>
