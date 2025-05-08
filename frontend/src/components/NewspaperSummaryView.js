@@ -53,11 +53,18 @@ function NewspaperSummaryView({ writingStyle: globalWritingStyle }) {
   }, [id, globalWritingStyle]);
 
   const regeneratePerspectives = async (articleData, style) => {
+    console.log('Starting perspective generation with style:', style);
+    console.log('Article data:', articleData);
+
     setRegenerating(true);
     try {
       // Use local backend URL for local testing
       const backendUrl = 'http://localhost:5001';
       const apiUrl = `${backendUrl}/api/news/regenerate/${id}`;
+
+      console.log('Sending request to:', apiUrl);
+      console.log('With payload:', { writingStyle: style || 'default' });
+
       const response = await axios.post(apiUrl, {
         writingStyle: style || 'default'
       }, {
@@ -67,13 +74,26 @@ function NewspaperSummaryView({ writingStyle: globalWritingStyle }) {
         }
       });
 
-      console.log('Regenerated perspectives:', response.data);
+      console.log('Regenerated perspectives response:', response);
+      console.log('Regenerated perspectives data:', response.data);
+
+      if (response.data && response.data.perspectives) {
+        console.log('New perspectives:', response.data.perspectives);
+      } else {
+        console.warn('No perspectives found in response data');
+      }
+
       setArticle(response.data);
+
+      // Force a re-render
+      setTimeout(() => {
+        console.log('Forcing re-render after perspective generation');
+        setRegenerating(false);
+      }, 500);
     } catch (err) {
       console.error('Error regenerating perspectives:', err);
       console.error('Error details:', err.message, err.response?.status, err.response?.data);
       setError('Failed to regenerate perspectives. Please try again later.');
-    } finally {
       setRegenerating(false);
     }
   };
@@ -172,13 +192,17 @@ function NewspaperSummaryView({ writingStyle: globalWritingStyle }) {
 
       {/* Generate Perspectives Button - Shown when perspectives are missing */}
       {(!pointPerspective || !counterpointPerspective) && (
-        <button
-          className="regenerate-button"
-          onClick={() => regeneratePerspectives(article, globalWritingStyle)}
-          disabled={regenerating}
-        >
-          {regenerating ? 'Generating Perspectives...' : 'Generate Point/Counterpoint Perspectives'}
-        </button>
+        <div className="generate-button-container">
+          <h3 className="generate-button-heading">Perspectives not available for this article</h3>
+          <button
+            className="regenerate-button"
+            onClick={() => regeneratePerspectives(article, globalWritingStyle)}
+            disabled={regenerating}
+          >
+            {regenerating ? 'Generating Perspectives...' : 'Generate Point/Counterpoint Perspectives'}
+          </button>
+          <p className="generate-button-note">Click the button above to generate perspectives for this article</p>
+        </div>
       )}
 
       <div className="newspaper-footer">

@@ -3,13 +3,33 @@ body {
   background-color: #e8e8e8;
   margin: 0;
   padding: 0;
+  min-height: 100vh;
+  width: 100%;
+}
+
+#root {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-height: 100vh;
+  width: 100%;
+}
+
+.app {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .newspaper-view {
+  width: 100%;
   max-width: 900px;
   margin: 20px auto;
   background-color: #f2f2f2; /* Light grey paper color */
@@ -20,10 +40,7 @@ body {
   color: #333;
   position: relative;
   overflow: hidden;
-  /* Center the article on the page */
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
+  box-sizing: border-box;
 }
 
 /* Add a subtle aged paper effect */
@@ -215,21 +232,44 @@ body {
   background-color: #555;
 }
 
+.generate-button-container {
+  background-color: #fff;
+  border: 2px dashed #d32f2f;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 30px auto;
+  text-align: center;
+  max-width: 80%;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.generate-button-heading {
+  font-size: 20px;
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.generate-button-note {
+  font-size: 14px;
+  color: #666;
+  margin-top: 15px;
+  font-style: italic;
+}
+
 .regenerate-button {
   display: inline-block;
   background-color: #d32f2f;
   color: #fff;
-  padding: 10px 20px;
+  padding: 12px 24px;
   text-decoration: none;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: bold;
   border-radius: 4px;
   transition: all 0.3s;
-  margin: 20px auto;
   border: none;
   cursor: pointer;
   box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-  display: block;
 }
 
 .regenerate-button:hover {
