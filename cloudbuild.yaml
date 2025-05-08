@@ -7,7 +7,8 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/fait-444705/pointcounterpoint-backend']
 
-  # Deploy backend to Cloud Run
+  # Deploy backend to Cloud Run with increased timeout and concurrency=1 for debugging
+  # Deploy backend to Cloud Run with secrets
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
@@ -18,7 +19,12 @@ steps:
       - '--region=us-central1'
       - '--platform=managed'
       - '--allow-unauthenticated'
-      - '--set-env-vars=OPENAI_API_KEY=${_OPENAI_API_KEY},NEWS_API_KEY=${_NEWS_API_KEY},SUPABASE_URL=https://ueqselkevtzpzgcapbzc.supabase.co,SUPABASE_KEY=${_SUPABASE_KEY}'
+      - '--set-env-vars=SUPABASE_URL=https://ueqselkevtzpzgcapbzc.supabase.co'
+      - '--update-secrets=OPENAI_API_KEY=openai-api-key:latest,NEWS_API_KEY=news-api-key:latest,SUPABASE_KEY=supabase-key:latest'
+      - '--timeout=5m'
+      - '--concurrency=1'
+      - '--cpu=1'
+      - '--memory=512Mi'
 
   # Build the frontend container image
   - name: 'gcr.io/cloud-builders/docker'
@@ -39,11 +45,6 @@ steps:
       - '--region=us-central1'
       - '--platform=managed'
       - '--allow-unauthenticated'
-
-substitutions:
-  _OPENAI_API_KEY: ''
-  _NEWS_API_KEY: ''
-  _SUPABASE_KEY: ''
 
 images:
   - 'gcr.io/fait-444705/pointcounterpoint-backend'
