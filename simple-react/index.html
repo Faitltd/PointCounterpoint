@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PointCounterpoint Simple React</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #333;
+            color: #fff;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #fd67a3;
+            text-align: center;
+            font-size: 28px;
+            margin-bottom: 30px;
+        }
+        
+        .categories {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .category-button {
+            background-color: #444;
+            color: #fff;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .category-button.active {
+            background-color: #fd67a3;
+        }
+        
+        .article {
+            background-color: #222;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .article-title {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .article-source {
+            font-style: italic;
+            color: #aaa;
+            margin-bottom: 15px;
+        }
+        
+        .article-content {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .perspective {
+            background-color: #333;
+            border-left: 4px solid #fd67a3;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .perspective-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #fd67a3;
+        }
+        
+        .perspective-content {
+            line-height: 1.6;
+        }
+        
+        .writing-style {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .writing-style select {
+            background-color: #444;
+            color: #fff;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+        }
+    </style>
+    <!-- React and ReactDOM CDN links -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        // Sample data
+        const articles = {
+            general: [
+                {
+                    id: "general-1",
+                    title: "New Climate Change Policy Announced",
+                    source: "Climate News",
+                    content: "The government announced a new climate change policy today that aims to reduce carbon emissions by 50% by 2030.",
+                    perspectives: {
+                        standard: [
+                            {
+                                title: "Point",
+                                content: "The new climate policy represents a crucial step forward in addressing the urgent climate crisis. By setting ambitious targets, the government is showing leadership on an issue that requires immediate action."
+                            },
+                            {
+                                title: "Counterpoint",
+                                content: "While climate change is a concern, this policy may place undue burden on businesses and could lead to job losses in key industries. The rapid timeline for implementation doesn't allow sufficient transition periods for affected sectors."
+                            }
+                        ],
+                        hunter: [
+                            {
+                                title: "Point",
+                                content: "By God, this is the kind of madness that makes perfect sense in our savage journey through the American Dream! Anyone with half a brain cell can see the raw truth here. The facts are clear as crystal meth to those brave enough to face them."
+                            },
+                            {
+                                title: "Counterpoint",
+                                content: "Those spineless bastards in their three-piece suits will tell you otherwise, of course. They'll feed you the same sanitized garbage they always do, wrapped in fancy words and false promises. It's the same old song and dance from the same old swine."
+                            }
+                        ],
+                        eli5: [
+                            {
+                                title: "Point",
+                                content: "Imagine you have a toy that everyone wants to play with. Some people think it's good to share the toy with everyone, taking turns. They say this way, everyone gets to have fun, and nobody feels left out."
+                            },
+                            {
+                                title: "Counterpoint",
+                                content: "But some people think differently. They say if too many kids play with the toy, it might break faster. Or maybe some kids won't be careful with it. It's like when you have a special drawing—sometimes you don't want everyone touching it."
+                            }
+                        ]
+                    }
+                },
+                {
+                    id: "general-2",
+                    title: "Global Economic Summit Concludes with New Agreements",
+                    source: "Business Daily",
+                    content: "World leaders reached several key agreements at the conclusion of the Global Economic Summit yesterday.",
+                    perspectives: {
+                        standard: [
+                            {
+                                title: "Point",
+                                content: "The summit represents a diplomatic triumph that will strengthen international cooperation and economic stability."
+                            },
+                            {
+                                title: "Counterpoint",
+                                content: "While the summit produced agreements, it failed to address several critical issues facing the global economy."
+                            }
+                        ]
+                    }
+                }
+            ],
+            technology: [
+                {
+                    id: "tech-1",
+                    title: "Tech Company Launches Revolutionary Product",
+                    source: "Tech Today",
+                    content: "A leading tech company has unveiled a groundbreaking new product that promises to transform the industry.",
+                    perspectives: {
+                        standard: [
+                            {
+                                title: "Point",
+                                content: "This product represents a significant leap forward in technology that could benefit millions of users worldwide."
+                            },
+                            {
+                                title: "Counterpoint",
+                                content: "Despite the excitement, there are legitimate concerns about this new technology."
+                            }
+                        ]
+                    }
+                }
+            ],
+            business: [
+                {
+                    id: "business-1",
+                    title: "Major Merger Announced Between Industry Leaders",
+                    source: "Financial Times",
+                    content: "Two industry giants have announced plans to merge in a deal valued at billions of dollars.",
+                    perspectives: {
+                        standard: [
+                            {
+                                title: "Point",
+                                content: "This merger creates a stronger company that can better compete in the global marketplace."
+                            },
+                            {
+                                title: "Counterpoint",
+                                content: "The consolidation raises concerns about reduced competition and potential impacts on consumers."
+                            }
+                        ]
+                    }
+                }
+            ]
+        };
+        
+        // React components
+        function App() {
+            const [currentCategory, setCurrentCategory] = React.useState('general');
+            const [currentStyle, setCurrentStyle] = React.useState('standard');
+            
+            const handleCategoryChange = (category) => {
+                setCurrentCategory(category);
+            };
+            
+            const handleStyleChange = (e) => {
+                setCurrentStyle(e.target.value);
+            };
+            
+            return (
+                <div className="container">
+                    <h1>PointCounterpoint</h1>
+                    
+                    <WritingStyleSelector 
+                        currentStyle={currentStyle} 
+                        onStyleChange={handleStyleChange} 
+                    />
+                    
+                    <CategorySelector 
+                        currentCategory={currentCategory} 
+                        onCategoryChange={handleCategoryChange} 
+                    />
+                    
+                    <ArticleList 
+                        articles={articles[currentCategory] || []} 
+                        currentStyle={currentStyle} 
+                    />
+                </div>
+            );
+        }
+        
+        function WritingStyleSelector({ currentStyle, onStyleChange }) {
+            return (
+                <div className="writing-style">
+                    <label htmlFor="style-select">News read to you by: </label>
+                    <select id="style-select" value={currentStyle} onChange={onStyleChange}>
+                        <option value="standard">Standard GPT</option>
+                        <option value="hunter">Hunter S. Thompson</option>
+                        <option value="parker">Dorothy Parker</option>
+                        <option value="sagan">Carl Sagan</option>
+                        <option value="baldwin">James Baldwin</option>
+                        <option value="pratchett">Terry Pratchett</option>
+                        <option value="eli5">ELI5</option>
+                    </select>
+                </div>
+            );
+        }
+        
+        function CategorySelector({ currentCategory, onCategoryChange }) {
+            const categories = [
+                { id: 'general', name: 'General' },
+                { id: 'business', name: 'Business' },
+                { id: 'technology', name: 'Technology' },
+                { id: 'entertainment', name: 'Entertainment' },
+                { id: 'sports', name: 'Sports' }
+            ];
+            
+            return (
+                <div className="categories">
+                    {categories.map(category => (
+                        <button 
+                            key={category.id}
+                            className={`category-button ${currentCategory === category.id ? 'active' : ''}`}
+                            onClick={() => onCategoryChange(category.id)}
+                        >
+                            {category.name}
+                        </button>
+                    ))}
+                </div>
+            );
+        }
+        
+        function ArticleList({ articles, currentStyle }) {
+            return (
+                <div>
+                    {articles.map(article => (
+                        <Article 
+                            key={article.id} 
+                            article={article} 
+                            currentStyle={currentStyle} 
+                        />
+                    ))}
+                </div>
+            );
+        }
+        
+        function Article({ article, currentStyle }) {
+            // Get perspectives for current style, fallback to standard if not available
+            const perspectives = article.perspectives[currentStyle] || article.perspectives.standard;
+            
+            return (
+                <div className="article">
+                    <div className="article-title">{article.title}</div>
+                    <div className="article-source">Source: {article.source}</div>
+                    <div className="article-content">{article.content}</div>
+                    
+                    {perspectives.map((perspective, index) => (
+                        <div key={index} className="perspective">
+                            <div className="perspective-title">{perspective.title}</div>
+                            <div className="perspective-content">{perspective.content}</div>
+                        </div>
+                    ))}
+                </div>
+            );
+        }
+        
+        // Render the App component
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
