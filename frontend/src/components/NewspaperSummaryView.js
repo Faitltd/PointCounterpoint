@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import WritingStyleDropdown from './WritingStyleDropdown.js';
 import './NewspaperView.css';
+import config from '../config.js'; // Import API configuration
+import { createCategoryUrl, slugify } from '../utils/urlUtils.js';
+import { sampleArticleDetails, writingStylePerspectives } from '../sampleData.js';
 
 function NewspaperSummaryView({ writingStyle: globalWritingStyle, onCategoryChange }) {
-  const { id } = useParams();
+  const { id, slug } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -26,36 +29,52 @@ function NewspaperSummaryView({ writingStyle: globalWritingStyle, onCategoryChan
 
   useEffect(() => {
     const fetchArticle = async () => {
-      console.log('Fetching article with ID:', id);
-      try {
-        // Use local backend URL for local testing
-        const backendUrl = 'http://localhost:5001';
-        const apiUrl = `${backendUrl}/api/news/article/${id}`;
-        console.log('API URL:', apiUrl);
+      console.log('Loading sample article with ID:', id);
+      setLoading(true);
 
-        // Add a timestamp to prevent caching and include writing style
-        const response = await axios.get(apiUrl, {
-          params: {
-            _t: new Date().getTime(),
-            writingStyle: globalWritingStyle
-          },
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          }
-        });
-        console.log('Article data received:', response.data);
-        console.log('Perspectives in response:', response.data.perspectives);
+      try {
+        // Short timeout to simulate loading
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Get the sample article for the ID, or create a fallback
+        const articleData = sampleArticleDetails[id] || {
+          id: id,
+          title: 'Sample Article',
+          source: { name: 'Sample Source' },
+          published_at: new Date().toISOString(),
+          content: 'This is a sample article with sample perspectives.',
+          perspectives: [
+            {
+              viewpoint: 'point',
+              summary: 'This is a sample perspective that presents one viewpoint on the topic.'
+            },
+            {
+              viewpoint: 'counterpoint',
+              summary: 'This is a sample perspective that presents an alternative viewpoint on the topic.'
+            },
+            {
+              viewpoint: 'neutral',
+              summary: 'This is a neutral summary of the topic without taking a particular stance.'
+            }
+          ]
+        };
+
+        console.log('Article data:', articleData);
 
         // Store the article data
-        setArticle(response.data);
+        setArticle(articleData);
         setError(null);
 
-        // Writing style is now applied in the initial request
-        console.log(`Article fetched with writing style: ${globalWritingStyle}`);
+        // If we don't have a slug in the URL, update the URL with the article title
+        if (!slug && articleData.title) {
+          const articleSlug = slugify(articleData.title);
+          const newUrl = `/article/${id}/${articleSlug}`;
+
+          // Use replace to avoid adding to browser history
+          navigate(newUrl, { replace: true });
+        }
       } catch (err) {
-        console.error('Error fetching article:', err);
-        console.error('Error details:', err.message, err.response?.status, err.response?.data);
+        console.error('Error loading article:', err);
         setError('Failed to load article. Please try again later.');
       } finally {
         setLoading(false);
@@ -63,59 +82,58 @@ function NewspaperSummaryView({ writingStyle: globalWritingStyle, onCategoryChan
     };
 
     fetchArticle();
-  }, [id]);
+  }, [id, slug, navigate]);
 
   const regeneratePerspectives = async (articleData, style) => {
-    console.log('Starting perspective generation with style:', style);
+    console.log('Simulating perspective generation with style:', style);
     console.log('Article ID:', id);
 
     setRegenerating(true);
 
     try {
-      // Use local backend URL for local testing
-      const backendUrl = 'http://localhost:5001';
-      const apiUrl = `${backendUrl}/api/news/regenerate/${id}`;
+      // Simulate API call with a timeout
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
-      console.log('Sending request to:', apiUrl);
-
-      // Use a simple fetch request with the exact format expected by the backend
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      // Get perspectives for the selected writing style
+      let newPerspectives = writingStylePerspectives[style] || [
+        {
+          viewpoint: 'point',
+          summary: 'This is a standard perspective on the topic that presents one viewpoint. The evidence suggests this interpretation has merit based on the available facts. Experts in the field have noted similar conclusions in their analysis of comparable situations.'
         },
-        body: JSON.stringify({
-          writingStyle: style || 'default'
-        }),
-      });
+        {
+          viewpoint: 'counterpoint',
+          summary: 'An alternative perspective suggests a different interpretation of the same facts. This viewpoint emphasizes different priorities and considerations that lead to a contrasting conclusion. Several studies have found evidence supporting this position as well.'
+        },
+        {
+          viewpoint: 'neutral',
+          summary: articleData.content || 'The topic presents multiple valid perspectives that reasonable people might hold based on their values and priorities.'
+        }
+      ];
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      console.log('Generated new perspectives for style:', style);
 
-      const data = await response.json();
-      console.log('Regenerated perspectives response:', data);
+      // Create updated article with new perspectives
+      const updatedArticle = {
+        ...articleData,
+        perspectives: newPerspectives
+      };
 
-      if (data && data.perspectives) {
-        console.log('New perspectives:', data.perspectives);
+      // Update the article with the new perspectives
+      setArticle(updatedArticle);
 
-        // Update the article with the new perspectives
-        setArticle(data);
+      // Find the point and counterpoint perspectives again
+      const point = newPerspectives.find(p =>
+        p.viewpoint === 'point' || p.viewpoint === 'perspective1' || p.viewpoint === 'liberal');
 
-        // Find the point and counterpoint perspectives again
-        const point = data.perspectives.find(p =>
-          p.viewpoint === 'point' || p.viewpoint === 'perspective1' || p.viewpoint === 'liberal');
+      const counterpoint = newPerspectives.find(p =>
+        p.viewpoint === 'counterpoint' || p.viewpoint === 'perspective2' || p.viewpoint === 'conservative');
 
-        const counterpoint = data.perspectives.find(p =>
-          p.viewpoint === 'counterpoint' || p.viewpoint === 'perspective2' || p.viewpoint === 'conservative');
+      console.log('New point perspective:', point);
+      console.log('New counterpoint perspective:', counterpoint);
 
-        console.log('New point perspective:', point);
-        console.log('New counterpoint perspective:', counterpoint);
-      } else {
-        console.warn('No perspectives found in response data');
-      }
+      setError(null);
     } catch (err) {
-      console.error('Error regenerating perspectives:', err);
+      console.error('Error generating perspectives:', err);
       setError('Failed to regenerate perspectives. Please try again later.');
     } finally {
       // Always set regenerating to false when done
@@ -163,7 +181,10 @@ function NewspaperSummaryView({ writingStyle: globalWritingStyle, onCategoryChan
   const handleCategoryClick = (categoryId) => {
     if (onCategoryChange) {
       onCategoryChange(categoryId);
-      navigate('/');
+
+      // Navigate to the category URL
+      const categoryUrl = createCategoryUrl(categoryId);
+      navigate(categoryUrl);
     }
   };
 

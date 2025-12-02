@@ -1,12 +1,21 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import WritingStyleDropdown from './WritingStyleDropdown.js';
 import ZipCodeInput from './ZipCodeInput.js';
+import { createArticleUrl, createCategoryUrl } from '../utils/urlUtils.js';
 
 function ArticleList({ articles, loading, error, onRefresh, writingStyle, onWritingStyleChange, onCategoryChange, currentCategory = 'general', onZipCodeSubmit }) {
   const [lastRefreshTime, setLastRefreshTime] = useState(new Date());
   const [timeAgo, setTimeAgo] = useState('');
   const navigate = useNavigate();
+  const params = useParams();
+
+  // If we have a category in the URL, use it
+  useEffect(() => {
+    if (params.category && params.category !== currentCategory) {
+      onCategoryChange(params.category);
+    }
+  }, [params.category, currentCategory, onCategoryChange]);
 
   const categories = [
     { id: 'general', name: 'General' },
@@ -77,6 +86,10 @@ function ArticleList({ articles, loading, error, onRefresh, writingStyle, onWrit
   const handleCategoryClick = (categoryId) => {
     if (onCategoryChange) {
       onCategoryChange(categoryId);
+
+      // Navigate to the category URL
+      const categoryUrl = createCategoryUrl(categoryId);
+      navigate(categoryUrl);
     }
   };
 
@@ -183,7 +196,7 @@ function ArticleList({ articles, loading, error, onRefresh, writingStyle, onWrit
               <div key={article.id} className="article-card">
                 <div className="article-card-content">
                   <Link
-                    to={`/article/${article.id}`}
+                    to={createArticleUrl(article.id, article.title, currentCategory)}
                     className="article-title-link"
                     onClick={() => console.log('Clicked article with ID:', article.id)}
                   >

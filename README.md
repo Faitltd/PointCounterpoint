@@ -74,6 +74,11 @@ news-perspectives-app/
    npm run dev
    ```
 
+5. Manually refresh articles (optional):
+   ```
+   npm run refresh-articles
+   ```
+
 ### Frontend Setup
 
 1. Navigate to the frontend directory:
@@ -100,6 +105,24 @@ docker-compose up
 ```
 
 This will start both the frontend and backend services.
+
+## Article Refresh Feature
+
+The application includes an automatic article refresh mechanism to ensure that headlines don't remain at the top all day:
+
+1. **Scheduled Refresh**: The backend server automatically refreshes articles every 3 hours using a cron job.
+
+2. **Article Rotation**: Articles are rotated based on a weighted algorithm that considers:
+   - Article age (newer articles are prioritized)
+   - Time since last shown (articles not shown recently get higher priority)
+   - Time-of-day variation (creates a subtle shift in article selection every hour)
+
+3. **Manual Refresh**: Users can manually refresh articles by clicking the "Refresh Stories" button.
+
+4. **Standalone Script**: A standalone script is available for manual or scheduled refreshes:
+   ```
+   npm run refresh-articles
+   ```
 
 ## Deployment to Google Cloud Run
 

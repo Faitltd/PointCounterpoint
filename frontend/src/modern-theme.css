@@ -25,6 +25,8 @@ body {
   padding: 0;
   line-height: 1.6;
   background-image: var(--newspaper-texture);
+  -webkit-tap-highlight-color: rgba(0,0,0,0); /* Remove tap highlight on mobile */
+  touch-action: manipulation; /* Improve touch interactions */
 }
 
 .app {
@@ -122,7 +124,7 @@ body {
   border-left: 1px solid #ddd;
 }
 
-.categories button:hover {
+.categories button:hover, .categories button:active, .categories button:focus {
   background-color: #f0f0f0;
   color: #000;
 }
@@ -188,7 +190,7 @@ body {
   letter-spacing: 0.5px;
 }
 
-.refresh-button:hover {
+.refresh-button:hover, .refresh-button:active, .refresh-button:focus {
   background-color: var(--primary-color);
 }
 
@@ -214,9 +216,10 @@ body {
   border-bottom: 1px solid #ddd;
   padding-bottom: 20px;
   position: relative;
+  cursor: pointer; /* Show pointer cursor on touch devices */
 }
 
-.article-card:hover {
+.article-card:hover, .article-card:active, .article-card:focus {
   background-color: #f9f9f9;
 }
 
@@ -264,9 +267,10 @@ body {
   align-self: flex-start;
   letter-spacing: 0.5px;
   text-transform: uppercase;
+  -webkit-tap-highlight-color: rgba(0,0,0,0); /* Remove tap highlight on mobile */
 }
 
-.view-button:hover {
+.view-button:hover, .view-button:active, .view-button:focus {
   background-color: var(--primary-color);
 }
 
@@ -297,7 +301,7 @@ body {
   padding-bottom: 5px;
 }
 
-.back-link:hover {
+.back-link:hover, .back-link:active, .back-link:focus {
   color: var(--primary-color);
   border-bottom-color: var(--primary-color);
 }
@@ -375,7 +379,7 @@ body {
   letter-spacing: 0.5px;
 }
 
-.toggle-buttons button:hover {
+.toggle-buttons button:hover, .toggle-buttons button:active, .toggle-buttons button:focus {
   background-color: #f0f0f0;
 }
 
@@ -537,7 +541,9 @@ body {
   letter-spacing: 0.5px;
 }
 
-.zip-code-input button:hover {
+.zip-code-input button:hover,
+.zip-code-input button:active,
+.zip-code-input button:focus {
   background-color: var(--primary-color);
 }
 
@@ -568,7 +574,9 @@ body {
   transition: color 0.2s;
 }
 
-.article-title-link:hover h2 {
+.article-title-link:hover h2,
+.article-title-link:active h2,
+.article-title-link:focus h2 {
   color: var(--primary-color);
   text-decoration: underline;
 }
@@ -671,18 +679,115 @@ body {
   }
 
   .summary-view {
-    padding: 24px;
+    padding: 16px;
   }
 
   .toggle-buttons {
     flex-wrap: wrap;
+    gap: 10px;
   }
 
   .article-list h1 {
-    font-size: 28px;
+    font-size: 24px;
   }
 
   .summary-content {
-    padding: 20px;
+    padding: 16px;
+  }
+
+  .content {
+    padding: 16px;
+  }
+
+  .categories {
+    overflow-x: auto;
+    justify-content: flex-start;
+    padding: 10px 0;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .categories button {
+    padding: 10px 14px;
+    font-size: 13px;
+    min-height: 44px; /* Minimum touch target size */
+  }
+
+  .toggle-buttons button {
+    min-width: 140px;
+    padding: 12px 16px;
+    min-height: 44px; /* Minimum touch target size */
+  }
+
+  .view-button {
+    padding: 12px 16px;
+    min-height: 44px; /* Minimum touch target size */
+    width: 100%;
+    text-align: center;
+  }
+
+  .refresh-button {
+    padding: 12px 16px;
+    min-height: 44px; /* Minimum touch target size */
+  }
+
+  .controls-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .writing-style-dropdown select {
+    min-height: 44px; /* Minimum touch target size */
+  }
+}
+
+/* Small phone screens */
+@media (max-width: 480px) {
+  .navbar h1 {
+    font-size: 24px;
+  }
+
+  .article-card h2 {
+    font-size: 20px;
+  }
+
+  .summary-view h1 {
+    font-size: 24px;
+  }
+
+  .perspective-title {
+    font-size: 16px;
+  }
+
+  .toggle-buttons button {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .toggle-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .content {
+    padding: 12px;
+  }
+
+  .zip-code-input form {
+    flex-direction: column;
+  }
+
+  .zip-code-input input,
+  .zip-code-input button {
+    width: 100%;
+  }
+
+  /* Fix for iOS Safari 100vh issue */
+  .app {
+    min-height: -webkit-fill-available;
+  }
+
+  /* Improve tap targets */
+  a, button, input, select, textarea {
+    touch-action: manipulation;
   }
 }

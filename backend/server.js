@@ -29,10 +29,7 @@ const app = express();
 
 // Configure CORS with options for both development and production
 const corsOptions = {
-  origin: [
-    'http://localhost:3000',
-    'https://pointcounterpoint-frontend-526297187726.us-central1.run.app'
-  ],
+  origin: '*', // Allow all origins
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
   credentials: true,

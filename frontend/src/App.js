@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import axios from 'axios';
+import { BrowserRouter as Router, Routes, Route, useParams, useNavigate, useLocation } from 'react-router-dom';
+import './reset.css'; // Import cross-browser CSS reset
 import './modern-theme.css'; // Import our modern theme
+import config from './config.js'; // Import API configuration
+
+// Import sample data
+import { sampleArticles } from './sampleData.js';
 
 // Components
 import ArticleList from './components/ArticleList.js';
 import NewspaperSummaryView from './components/NewspaperSummaryView.js';
+import CategoryWrapper from './components/CategoryWrapper.js';
 
 function App() {
   const [articles, setArticles] = useState([]);
@@ -20,33 +25,28 @@ function App() {
 
   const fetchArticles = async (category) => {
     setLoading(true);
+
     try {
-      console.log(`Fetching articles for category: ${category}`);
+      console.log(`Loading sample articles for category: ${category}`);
 
-      // Use local backend URL for local testing
-      const backendUrl = 'http://localhost:5001';
-      const apiUrl = `${backendUrl}/api/news/headlines?category=${category}`;
+      // Short timeout to simulate loading
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      const response = await axios.get(apiUrl, {
-        params: {
-          writingStyle: globalWritingStyle
-        },
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      });
+      // Get the sample articles for the selected category, or fall back to general
+      const categoryArticles = sampleArticles[category] || sampleArticles.general;
 
-      console.log('API response:', response.data);
-      setArticles(response.data);
-      setError(null);
+      if (categoryArticles && categoryArticles.length > 0) {
+        setArticles(categoryArticles);
+        setError(null);
+      } else {
+        throw new Error('No articles available for this category');
+      }
     } catch (err) {
-      console.error('Error fetching articles:', err);
-      console.error('Error details:', err.message, err.response?.status, err.response?.data);
+      console.error('Error loading articles:', err);
       setError('Failed to load articles. Please try again later.');
 
-      // Fallback to empty array to prevent UI from being stuck in loading state
-      setArticles([]);
+      // Fallback to general articles
+      setArticles(sampleArticles.general);
     } finally {
       setLoading(false);
     }
@@ -58,7 +58,10 @@ function App() {
   };
 
   const handleCategoryChange = (category) => {
-    setCurrentCategory(category);
+    if (category && category !== currentCategory) {
+      setCurrentCategory(category);
+      console.log(`Category changed to: ${category}`);
+    }
   };
 
   // Handle zip code submission for local news
@@ -67,8 +70,8 @@ function App() {
     try {
       console.log(`Fetching local news for zip code: ${zipCode}`);
 
-      // Use local backend URL for local testing
-      const backendUrl = 'http://localhost:5001';
+      // Use the configured backend URL
+      const backendUrl = config.API_URL;
       const apiUrl = `${backendUrl}/api/news/local/${zipCode}`;
 
       const response = await axios.get(apiUrl, {
@@ -118,6 +121,30 @@ function App() {
                 onZipCodeSubmit={handleZipCodeSubmit}
               />}
             />
+            {/* Category-specific routes */}
+            <Route
+              path="/category/:category"
+              element={<CategoryWrapper
+                articles={articles}
+                loading={loading}
+                error={error}
+                onRefresh={() => fetchArticles(currentCategory)}
+                writingStyle={globalWritingStyle}
+                onWritingStyleChange={handleWritingStyleChange}
+                onCategoryChange={handleCategoryChange}
+                currentCategory={currentCategory}
+                onZipCodeSubmit={handleZipCodeSubmit}
+              />}
+            />
+            {/* Article routes with clean URLs */}
+            <Route
+              path="/article/:id/:slug"
+              element={<NewspaperSummaryView
+                writingStyle={globalWritingStyle}
+                onCategoryChange={handleCategoryChange}
+              />}
+            />
+            {/* Backward compatibility for old URLs */}
             <Route
               path="/article/:id"
               element={<NewspaperSummaryView

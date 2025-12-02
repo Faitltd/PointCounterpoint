@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import WritingStyleDropdown from './WritingStyleDropdown.js';
+import './NewspaperView.css';
 
 function SummaryView({ writingStyle: globalWritingStyle }) {
   const { id } = useParams();
@@ -94,7 +95,16 @@ function SummaryView({ writingStyle: globalWritingStyle }) {
   // Function to format perspective content
   const formatPerspectiveContent = (content) => {
     if (!content) return 'No perspective available.';
-    return <p>{content}</p>;
+
+    // Split content by paragraphs and wrap each in a <p> tag
+    const paragraphs = content.split('\n\n');
+    return (
+      <>
+        {paragraphs.map((paragraph, index) => (
+          <p key={index}>{paragraph}</p>
+        ))}
+      </>
+    );
   };
 
   // Find the point and counterpoint perspectives
