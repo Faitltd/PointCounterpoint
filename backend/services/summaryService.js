@@ -1,8 +1,8 @@
-const Anthropic = require('@anthropic-ai/sdk');
+const OpenAI = require('openai');
 require('dotenv').config();
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
 });
 
 /**
@@ -21,21 +21,19 @@ const generateSummaries = async (articleContent) => {
     const summaries = [];
 
     for (const perspective of perspectives) {
-      const response = await anthropic.messages.create({
-        model: 'claude-3-5-sonnet-20241022',
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
         max_tokens: 256,
-        system: `You are an assistant that summarizes news articles from a ${perspective.viewpoint} perspective. Keep summaries concise (3-4 sentences).`,
+        temperature: 0.4,
         messages: [
-          {
-            role: 'user',
-            content: `${perspective.prompt} ${articleContent}`
-          }
+          { role: 'system', content: `You are an assistant that summarizes news articles from a ${perspective.viewpoint} perspective. Keep summaries concise (3-4 sentences).` },
+          { role: 'user', content: `${perspective.prompt} ${articleContent}` }
         ]
       });
 
       summaries.push({
         viewpoint: perspective.viewpoint,
-        summary: response.content[0].text.trim()
+        summary: response.choices[0].message.content.trim()
       });
     }
 
@@ -55,11 +53,11 @@ const generateSummaries = async (articleContent) => {
  */
 const generateDetailedPerspectives = async (headline, content, writingStyle = 'default') => {
   try {
-    // Check if Anthropic API key is valid
-    console.log('Checking Anthropic API key:', process.env.ANTHROPIC_API_KEY ? 'Key exists' : 'No key');
+    // Check if OpenAI API key is valid
+    console.log('Checking OpenAI API key:', process.env.OPENAI_API_KEY ? 'Key exists' : 'No key');
 
-    if (!process.env.ANTHROPIC_API_KEY) {
-      console.log('No Anthropic API key found. Using fallback perspectives.');
+    if (!process.env.OPENAI_API_KEY) {
+      console.log('No OpenAI API key found. Using fallback perspectives.');
       return generateFallbackPerspectives(headline, content);
     }
 
@@ -132,20 +130,17 @@ Produce three sections:
       console.log('Using style instructions:', styleInstructions);
     }
 
-    const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
       max_tokens: 1500,
       temperature: 0.5,
-      system: systemPrompt,
       messages: [
-        {
-          role: 'user',
-          content: `Headline: ${headline}\nSummary: ${content}`
-        }
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: `Headline: ${headline}\nSummary: ${content}` }
       ]
     });
 
-    const fullAnalysis = response.content[0].text.trim();
+    const fullAnalysis = response.choices[0].message.content.trim();
 
     // Parse the response to extract the three perspectives
     const sections = parseOpposingViewsResponse(fullAnalysis);
@@ -368,18 +363,21 @@ const generateLocalNews = async (zipCode, count = 5) => {
     console.log(`Searching for local news for zip code: ${zipCode}`);
 
     // Check if Anthropic API key is valid
-    if (!process.env.ANTHROPIC_API_KEY) {
-      console.log('No Anthropic API key found. Using fallback local news.');
+    if (!process.env.OPENAI_API_KEY) {
+      console.log('No OpenAI API key found. Using fallback local news.');
       return [];
     }
 
-    // First, ask Claude to identify the location based on the zip code
-    const locationResponse = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+    // First, ask OpenAI to identify the location based on the zip code
+    const locationResponse = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
       max_tokens: 200,
       temperature: 0.3,
-      system: 'You are a helpful assistant that provides information about geographic locations based on zip codes.',
       messages: [
+        {
+          role: 'system',
+          content: 'You are a helpful assistant that provides information about geographic locations based on zip codes.'
+        },
         {
           role: 'user',
           content: `What city, county, and state is zip code ${zipCode} located in? Respond with just the location information in a simple format like "City, County, State".`
@@ -387,7 +385,7 @@ const generateLocalNews = async (zipCode, count = 5) => {
       ]
     });
 
-    const locationInfo = locationResponse.content[0].text.trim();
+    const locationInfo = locationResponse.choices[0].message.content.trim();
     console.log(`Zip code ${zipCode} corresponds to: ${locationInfo}`);
 
     // Now, ask Claude to search for real news articles about this location
@@ -429,12 +427,12 @@ Format your response as a valid JSON array with the following structure for each
 
 Focus on diverse topics (local government, community events, business, education, crime, etc.) that would be relevant to people living in this location. These should be FRESH, RECENT news stories from the last 24 hours that someone could actually find if they searched for news about this location today.`;
 
-    const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
       max_tokens: 2000,
       temperature: 0.7,
-      system: systemPrompt,
       messages: [
+        { role: 'system', content: systemPrompt },
         {
           role: 'user',
           content: `Search for ${count} real, FRESH news articles from the LAST 24 HOURS about ${locationInfo}. Only include the most recent stories from today or yesterday.`
@@ -442,7 +440,7 @@ Focus on diverse topics (local government, community events, business, education
       ]
     });
 
-    let content = response.content[0].text.trim();
+    let content = response.choices[0].message.content.trim();
     console.log('Found local news content:', content);
 
     try {
