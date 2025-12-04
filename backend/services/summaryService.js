@@ -86,6 +86,7 @@ Produce three sections:
    • Format the title as "Title: [Your Title Here]" on its own line.
    • Then write a single, natural paragraph (3-5 sentences) supporting the article like a well-read fan, with at least two concrete specifics (names, numbers, locations, timing) before any interpretation.
    • Do not repeat the headline verbatim, do not use quotation marks, and avoid stilted templates—make it read like a thoughtful take, not a form letter.
+   • Do NOT describe what a supporter “would highlight” or “would argue”—just give the take directly.
    • Emphasize why this perspective is enthusiastic, who would appreciate it, and one practical upside they’d highlight.
    • This should represent one reasonable interpretation or viewpoint on the issue.
    • Do NOT default to political points of view unless the article is explicitly political.
@@ -99,6 +100,7 @@ Produce three sections:
    • Format the title as "Title: [Your Title Here]" on its own line.
    • Then write a single, natural paragraph (3-5 sentences) explaining why an informed reader is not a fan of the article, citing specific details or tradeoffs they dislike, with at least two concrete specifics (names, numbers, locations, timing) before interpretation.
    • Do not repeat the headline verbatim, do not use quotation marks, and avoid stilted templates—make it read like a thoughtful take, not a form letter.
+   • Do NOT describe what skeptics “would flag” or “would argue”—just state the opposing take directly.
    • Emphasize who would be skeptical, what feels weak or risky, and one practical caution or alternative they’d stress.
    • This should represent an opposing interpretation or viewpoint to the Point section.
    • Do NOT default to political points of view unless the article is explicitly political.
@@ -176,11 +178,11 @@ const generateFallbackPerspectives = (headline, content) => {
     : content;
 
   return {
-    point: `${headline} reports a concrete development: ${contentSummary}. Supporters would highlight who benefits first and how it improves day-to-day experience, calling out any clear wins, numbers, or named stakeholders. They’d connect it to recent momentum or precedent and close with one practical upside (e.g., access, performance, participation).`,
+    point: `${headline} moves the story forward: ${contentSummary}. The supportive read is that this change delivers immediate value for the people named and the place noted, building on recent momentum and clear wins. It highlights a practical upside for daily use or performance and treats this as progress that will compound.`,
 
     pointTitle: `Supporters See Momentum`,
 
-    counterpoint: `${headline} also raises questions: ${contentSummary}. Skeptics would flag missing details (costs, tradeoffs, or who loses access), compare to similar cases that went sideways, and cite a practical caution such as fees, delays, or inequitable impact. They’d suggest a concrete alternative safeguard or action before embracing the change.`,
+    counterpoint: `${headline} also exposes gaps: ${contentSummary}. A skeptical take focuses on missing costs, tradeoffs, or who might lose out, pointing to how similar cases have stumbled. It surfaces a concrete risk like fees, delays, or inequitable impact and presses for a safeguard before calling it a win.`,
 
     counterpointTitle: `Skeptics Flag Tradeoffs`,
 
