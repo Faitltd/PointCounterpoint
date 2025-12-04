@@ -1,6 +1,14 @@
 const axios = require('axios');
 require('dotenv').config();
 
+// Shared HTTP client with sane defaults for external APIs
+const http = axios.create({
+  timeout: 8000,
+  headers: {
+    'User-Agent': 'PointCounterpoint/1.0'
+  }
+});
+
 // We'll use the NewsAPI.org service with the provided API key
 const NEWS_API_KEY = process.env.NEWS_API_KEY;
 const NEWS_API_URL = 'https://newsapi.org/v2';
@@ -475,33 +483,23 @@ const MOCK_ARTICLES = {
  */
 const fetchTopHeadlines = async (category = 'general', count = 10) => {
   try {
-    let results = [];
+    const tasks = [];
 
-    // Webz.io
-    if (WEBZIO_API_KEY) {
-      const webzArticles = await fetchFromWebz(category, count);
-      results = results.concat(webzArticles);
+    if (WEBZIO_API_KEY) tasks.push(fetchFromWebz(category, count));
+    if (NEWS_API_KEY) tasks.push(fetchFromNewsApiOrg(category, count));
+    if (GNEWS_API_KEY) tasks.push(fetchFromGNews(category, count));
+    if (THE_NEWS_API_KEY) tasks.push(fetchFromTheNewsApi(category, count));
+
+    if (tasks.length === 0) {
+      console.warn('No news providers configured.');
+      return [];
     }
 
-    // NewsAPI.org
-    if (NEWS_API_KEY) {
-      const newsApiArticles = await fetchFromNewsApiOrg(category, count);
-      results = results.concat(newsApiArticles);
-    }
+    const settled = await Promise.allSettled(tasks);
+    const results = settled
+      .filter(r => r.status === 'fulfilled' && Array.isArray(r.value))
+      .flatMap(r => r.value);
 
-    // GNews
-    if (GNEWS_API_KEY) {
-      const gnewsArticles = await fetchFromGNews(category, count);
-      results = results.concat(gnewsArticles);
-    }
-
-    // TheNewsAPI
-    if (THE_NEWS_API_KEY) {
-      const theNewsApiArticles = await fetchFromTheNewsApi(category, count);
-      results = results.concat(theNewsApiArticles);
-    }
-
-    // Deduplicate and limit
     const deduped = dedupeArticles(results).slice(0, count);
     console.log(`Aggregated ${deduped.length} unique articles for category ${category}`);
     return deduped;
@@ -518,7 +516,7 @@ const fetchTopHeadlines = async (category = 'general', count = 10) => {
  */
 const fetchFromWebz = async (category = 'general', count = 10) => {
   try {
-    const response = await axios.get(WEBZIO_API_URL, {
+    const response = await http.get(WEBZIO_API_URL, {
       params: {
         token: WEBZIO_API_KEY,
         q: `site_type:news AND language:english AND category:${category}`,
@@ -569,7 +567,7 @@ const fetchFromNewsApiOrg = async (category = 'general', count = 10) => {
       params.category = category;
     }
 
-    const response = await axios.get(`${NEWS_API_URL}/top-headlines`, { params });
+    const response = await http.get(`${NEWS_API_URL}/top-headlines`, { params });
     const articles = response.data?.articles || [];
 
     if (!Array.isArray(articles) || articles.length === 0) {
@@ -603,7 +601,7 @@ const fetchFromNewsApiOrg = async (category = 'general', count = 10) => {
 const fetchFromGNews = async (category = 'general', count = 10) => {
   try {
     const topic = mapCategoryToGNewsTopic(category);
-    const response = await axios.get(`${GNEWS_API_URL}/top-headlines`, {
+    const response = await http.get(`${GNEWS_API_URL}/top-headlines`, {
       params: {
         apikey: GNEWS_API_KEY,
         lang: 'en',
@@ -646,7 +644,7 @@ const fetchFromGNews = async (category = 'general', count = 10) => {
 const fetchFromTheNewsApi = async (category = 'general', count = 10) => {
   try {
     const categories = mapCategoryToTheNewsApi(category);
-    const response = await axios.get(`${THE_NEWS_API_URL}/top`, {
+    const response = await http.get(`${THE_NEWS_API_URL}/top`, {
       params: {
         locale: 'us',
         language: 'en',
@@ -729,8 +727,8 @@ const getRandomArticles = async (count = 10, category = 'general') => {
     return shuffleArray(articles).slice(0, count);
   } catch (error) {
     console.error('Error getting random articles:', error.message);
-    // Return mock articles instead of throwing an error
-    return getMockArticles(category).slice(0, count);
+    // Return empty array instead of mock data for production behavior
+    return [];
   }
 };
 

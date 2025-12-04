@@ -17,140 +17,6 @@ const {
 console.log('Supabase URL:', process.env.SUPABASE_URL);
 console.log('Supabase Key exists:', !!process.env.SUPABASE_KEY);
 
-// Sample articles data for fallback when database is unavailable
-const sampleArticles = [
-  {
-    _id: '60d21b4667d0d8992e610c85',
-    title: 'New Climate Change Policy Announced',
-    source: {
-      name: 'Climate News',
-      url: 'https://example.com/climate'
-    },
-    url: 'https://example.com/climate/policy',
-    publishedAt: new Date(),
-    content: 'The government announced a new climate change policy today that aims to reduce carbon emissions by 50% by 2030.',
-    category: 'general',
-    perspectives: [
-      {
-        viewpoint: 'perspective1',
-        summary: 'TLDR: The new climate policy is a necessary and effective approach to addressing climate change.\n\nThe new climate policy represents a crucial step forward in addressing the urgent climate crisis. By setting ambitious targets, the government is showing leadership on an issue that requires immediate action. According to the International Climate Institute (2024), policies with similar emission reduction targets have been effective in other countries without significant economic disruption. The combination of incentives and regulations creates a balanced approach that can drive innovation while ensuring accountability.'
-      },
-      {
-        viewpoint: 'perspective2',
-        summary: 'TLDR: The climate policy may be too aggressive and could harm economic growth.\n\nWhile climate change is a concern, this policy may place undue burden on businesses and could lead to job losses in key industries. The rapid timeline for implementation doesn\'t allow sufficient transition periods for affected sectors. Research from the Economic Policy Center (2023) suggests that more gradual approaches to emissions reduction can achieve similar environmental outcomes while better protecting economic stability. A more balanced policy might include longer implementation timelines and additional support for affected industries.'
-      },
-      {
-        viewpoint: 'neutral',
-        summary: 'The new policy sets a 50% emissions reduction target by 2030, implementing both renewable energy incentives and carbon taxes. The plan includes specific measures for different sectors of the economy, with particular focus on energy production, transportation, and industrial manufacturing. The policy was developed following consultation with environmental experts, industry representatives, and economic analysts.'
-      }
-    ]
-  },
-  {
-    _id: '60d21b4667d0d8992e610c86',
-    title: 'Tech Company Announces New AI Product',
-    source: {
-      name: 'Tech Today',
-      url: 'https://example.com/tech'
-    },
-    url: 'https://example.com/tech/ai-product',
-    publishedAt: new Date(),
-    content: 'A major tech company unveiled its latest artificial intelligence product today, claiming it will revolutionize how businesses operate.',
-    category: 'technology',
-    perspectives: [
-      {
-        viewpoint: 'perspective1',
-        summary: 'TLDR: The AI product represents significant technological progress but requires careful oversight.\n\nThis new AI technology represents an important advancement that could transform how businesses operate and analyze data. The efficiency gains could lead to significant productivity improvements across multiple sectors. However, as noted in a recent MIT Technology Review article (2024), robust governance frameworks are essential to ensure these systems are deployed responsibly. The potential benefits must be balanced with appropriate safeguards for data privacy and algorithmic transparency.'
-      },
-      {
-        viewpoint: 'perspective2',
-        summary: 'TLDR: The AI product raises concerns about job displacement and privacy implications.\n\nWhile technologically impressive, this AI system raises important questions about workforce impacts and data usage. The automation capabilities could potentially eliminate jobs in sectors already facing economic challenges. According to research from the Center for Responsible Technology (2023), similar AI deployments have led to significant workforce disruptions without adequate transition planning. Additionally, the data collection requirements for such systems often create privacy vulnerabilities that may not be immediately apparent.'
-      },
-      {
-        viewpoint: 'neutral',
-        summary: 'The new AI product offers automation capabilities for complex business tasks and data analysis. The system uses machine learning algorithms to process large datasets and generate actionable insights. The company claims the technology can reduce processing time by 60% compared to existing solutions and has been tested across multiple industry verticals with consistent results.'
-      }
-    ]
-  },
-  {
-    _id: '60d21b4667d0d8992e610c87',
-    title: 'Healthcare Reform Bill Passes Senate',
-    source: {
-      name: 'Politics Daily',
-      url: 'https://example.com/politics'
-    },
-    url: 'https://example.com/politics/healthcare-bill',
-    publishedAt: new Date(),
-    content: 'The Senate passed a major healthcare reform bill today with a vote of 52-48.',
-    category: 'politics',
-    perspectives: [
-      {
-        viewpoint: 'liberal',
-        summary: 'This historic healthcare reform will finally ensure that healthcare is treated as a right, not a privilege.'
-      },
-      {
-        viewpoint: 'conservative',
-        summary: 'The bill represents government overreach into healthcare that will increase the national debt.'
-      },
-      {
-        viewpoint: 'neutral',
-        summary: 'The healthcare bill passed with a 52-48 vote and includes provisions for expanded coverage and lower prescription drug prices.'
-      }
-    ]
-  },
-  {
-    _id: '60d21b4667d0d8992e610c88',
-    title: 'Stock Market Reaches Record High',
-    source: {
-      name: 'Financial Times',
-      url: 'https://example.com/finance'
-    },
-    url: 'https://example.com/finance/stock-record',
-    publishedAt: new Date(),
-    content: 'The stock market reached an all-time high today, with the main index closing up 2.3%.',
-    category: 'business',
-    perspectives: [
-      {
-        viewpoint: 'liberal',
-        summary: 'While the market is performing well, we must remember that stock gains primarily benefit the wealthy.'
-      },
-      {
-        viewpoint: 'conservative',
-        summary: 'The record market performance demonstrates the strength of the economy under pro-business policies.'
-      },
-      {
-        viewpoint: 'neutral',
-        summary: 'The stock market index rose 2.3% to a record high, driven by strong earnings reports and economic optimism.'
-      }
-    ]
-  },
-  {
-    _id: '60d21b4667d0d8992e610c89',
-    title: 'New Study on Mental Health Benefits of Exercise',
-    source: {
-      name: 'Health Journal',
-      url: 'https://example.com/health'
-    },
-    url: 'https://example.com/health/exercise-mental-health',
-    publishedAt: new Date(),
-    content: 'A new study published today found that regular exercise can significantly reduce symptoms of anxiety and depression.',
-    category: 'health',
-    perspectives: [
-      {
-        viewpoint: 'liberal',
-        summary: 'This research highlights the need for community-based exercise programs and public spaces that are accessible to all.'
-      },
-      {
-        viewpoint: 'conservative',
-        summary: 'The study shows that individuals can take personal responsibility for their mental health through lifestyle choices like exercise.'
-      },
-      {
-        viewpoint: 'neutral',
-        summary: 'The study found that regular exercise correlated with improved mental health outcomes, particularly for anxiety and depression symptoms.'
-      }
-    ]
-  }
-];
-
 // Helper function to handle errors and return fallback data
 const handleError = (error, fallbackData) => {
   console.error('Error:', error);
@@ -235,20 +101,10 @@ router.get('/headlines', async (req, res) => {
           .map(normalizeArticle)
           .filter(a => !excludeSet.has(a.id));
 
-        if (dedupedArticles.length < 4) {
-          console.log(`Only ${dedupedArticles.length} unique from Supabase, pulling more from NewsAPI/Webz...`);
-          const moreNews = await getRandomNewsApiArticles(15, category);
+        if (dedupedArticles.length < 5) {
+          console.log(`Only ${dedupedArticles.length} unique from Supabase, pulling more from APIs...`);
+          const moreNews = await getRandomNewsApiArticles(20, category);
           dedupedArticles = dedupeArticles([...dedupedArticles, ...moreNews])
-            .map(normalizeArticle)
-            .filter(a => !excludeSet.has(a.id));
-        }
-
-        // As a final guard, top up with sample articles if still low
-        if (dedupedArticles.length < 4) {
-          const samples = category === 'all'
-            ? sampleArticles
-            : sampleArticles.filter(a => a.category === category);
-          dedupedArticles = dedupeArticles([...dedupedArticles, ...samples])
             .map(normalizeArticle)
             .filter(a => !excludeSet.has(a.id));
         }
@@ -287,15 +143,11 @@ router.get('/headlines', async (req, res) => {
         }
       }
 
-      let newsReturn = dedupedNewsApiArticles;
-
-      // No sample topping here; allow fewer results but real ids
-
-      return res.json(newsReturn.slice(0, 5));
+      const newsReturn = dedupedNewsApiArticles.slice(0, 5);
+      return res.json(newsReturn);
     } catch (apiError) {
       console.error('Error fetching articles:', apiError);
 
-      // Last resort: return empty array instead of samples
       console.log('No articles found; returning empty list to avoid sample placeholders');
       return res.json([]);
     }
