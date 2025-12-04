@@ -143,7 +143,21 @@ Produce three sections:
     const fullAnalysis = response.choices[0].message.content.trim();
 
     // Parse the response to extract the three perspectives
-    const sections = parseOpposingViewsResponse(fullAnalysis);
+    let sections = parseOpposingViewsResponse(fullAnalysis);
+
+    // Heuristic fallback if parsing failed or produced placeholders
+    const placeholderPoint = sections.point && sections.point.includes('This perspective could not be generated');
+    const placeholderCounter = sections.counterpoint && sections.counterpoint.includes('This perspective could not be generated');
+    const placeholderNeutral = sections.neutral && sections.neutral.includes('The article presents factual information that should be evaluated in context.');
+
+    if (placeholderPoint || placeholderCounter || placeholderNeutral) {
+      const paragraphFallback = splitIntoParagraphs(fullAnalysis);
+      if (paragraphFallback.point) sections.point = paragraphFallback.point;
+      if (paragraphFallback.counterpoint) sections.counterpoint = paragraphFallback.counterpoint;
+      if (paragraphFallback.neutral) sections.neutral = paragraphFallback.neutral;
+      sections.pointTitle = '';
+      sections.counterpointTitle = '';
+    }
 
     return sections;
   } catch (error) {
@@ -487,3 +501,14 @@ Focus on diverse topics (local government, community events, business, education
 };
 
 module.exports = { generateSummaries, generateDetailedPerspectives, generateLocalNews };
+// Heuristic: split freeform response into neutral/point/counterpoint paragraphs
+const splitIntoParagraphs = (text = '') => {
+  const paras = text.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+  return {
+    neutral: paras[0] || '',
+    point: paras[1] || 'This perspective could not be generated. Please try again.',
+    counterpoint: paras[2] || 'This perspective could not be generated. Please try again.',
+    pointTitle: '',
+    counterpointTitle: ''
+  };
+};
