@@ -374,13 +374,20 @@ router.get('/article/:id', async (req, res) => {
               s.includes('moves the story forward') ||
               s.includes('also exposes gaps') ||
               s.includes('supportive take highlights immediate value') ||
+              s.includes('supportive read highlights') ||
               s.includes('critical read calls out the missing costs') ||
+              s.includes('critical read calls out') ||
               s.includes('supporters see momentum') ||
               s.includes('skeptics flag tradeoffs')
             );
           });
 
-        if (!article.perspectives || article.perspectives.length === 0 || writingStyle !== 'standard' || hasGenericFallback || hasLowQuality) {
+        const hasSampleText = Array.isArray(article.perspectives) &&
+          article.perspectives.some(p => typeof p.summary === 'string' && p.summary.includes('This is a sample perspective'));
+
+        const isMockId = typeof article.id === 'string' && article.id.startsWith('mock-');
+
+        if (!article.perspectives || article.perspectives.length === 0 || writingStyle !== 'standard' || hasGenericFallback || hasLowQuality || hasSampleText || isMockId) {
           console.log(`Generating perspectives for article with style: ${writingStyle}... (regenerate=${hasGenericFallback || hasLowQuality})`);
           await generateAndSavePerspectives(article, writingStyle);
         }
