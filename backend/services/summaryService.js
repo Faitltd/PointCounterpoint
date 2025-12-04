@@ -176,15 +176,15 @@ const generateFallbackPerspectives = (headline, content) => {
   const cleanContentSummary = contentSummary.replace(/["“”]/g, '');
 
   return {
-    point: `${cleanHeadline} moves the story forward: ${cleanContentSummary}. This supportive take highlights immediate value for the people named and the place noted, building on recent momentum and clear wins. It underscores a practical upside for daily use or performance and treats this as progress that will compound.`,
+    point: `${cleanHeadline} reports: ${cleanContentSummary}. A supportive read highlights concrete gains tied to the specifics here (people, place, timing) and explains how those gains continue over the next few steps. It should cite at least one clear upside that flows directly from the details above.`,
 
-    pointTitle: `Supporters See Momentum`,
+    pointTitle: ``,
 
-    counterpoint: `${cleanHeadline} also exposes gaps: ${cleanContentSummary}. This skeptical take focuses on missing costs, tradeoffs, or who might lose out, pointing to how similar cases have stumbled. It surfaces a concrete risk like fees, delays, or inequitable impact and presses for a safeguard before calling it a win.`,
+    counterpoint: `${cleanHeadline} also leaves gaps: ${cleanContentSummary}. A critical read calls out the missing costs, tradeoffs, or excluded parties and links that skepticism to the specifics above. It should name one plausible risk or downside and one practical safeguard rooted in those details.`,
 
-    counterpointTitle: `Skeptics Flag Tradeoffs`,
+    counterpointTitle: ``,
 
-    neutral: `The article outlines: ${cleanContentSummary} Readers should review the full context and multiple sources for details on timing, scope, and stakeholders.`
+    neutral: `Key facts: ${cleanContentSummary} Readers should verify timing, scope, sources, and affected stakeholders.`
   };
 };
 
@@ -260,40 +260,16 @@ const parseOpposingViewsResponse = (response) => {
   if (pointMatch && pointMatch[1]) {
     const pointContent = pointMatch[1].trim();
     console.log('Extracted point content:', pointContent);
-
-    // Extract title if present
-    const titleMatch = pointContent.match(/Title:\s*([^\n]+)/i);
-    if (titleMatch && titleMatch[1]) {
-      result.pointTitle = titleMatch[1].trim();
-      console.log('Extracted point title:', result.pointTitle);
-      // Remove the title line from the content
-      result.point = pointContent.replace(/Title:\s*[^\n]+\n*/i, '').trim();
-    } else {
-      // Try to find a title at the beginning of the point content
-      const firstLineMatch = pointContent.match(/^([^\.]+)\./);
-      if (firstLineMatch && firstLineMatch[1] && firstLineMatch[1].length < 50) {
-        result.pointTitle = firstLineMatch[1].trim();
-        console.log('Extracted point title from first line:', result.pointTitle);
-      }
-      result.point = pointContent;
-    }
+    result.point = pointContent;
+    result.pointTitle = '';
   } else {
     // Try alternative pattern for point
     const altPointMatch = response.match(/Point:([\s\S]*?)(?=Counterpoint:|$)/i);
     if (altPointMatch && altPointMatch[1]) {
       const pointContent = altPointMatch[1].trim();
       console.log('Extracted point content (alt):', pointContent);
-
-      // Extract title if present
-      const titleMatch = pointContent.match(/Title:\s*([^\n]+)/i);
-      if (titleMatch && titleMatch[1]) {
-        result.pointTitle = titleMatch[1].trim();
-        console.log('Extracted point title (alt):', result.pointTitle);
-        // Remove the title line from the content
-        result.point = pointContent.replace(/Title:\s*[^\n]+\n*/i, '').trim();
-      } else {
-        result.point = pointContent;
-      }
+      result.point = pointContent;
+      result.pointTitle = '';
     }
   }
 
@@ -302,53 +278,22 @@ const parseOpposingViewsResponse = (response) => {
   if (counterpointMatch && counterpointMatch[1]) {
     const counterpointContent = counterpointMatch[1].trim();
     console.log('Extracted counterpoint content:', counterpointContent);
-
-    // Extract title if present
-    const titleMatch = counterpointContent.match(/Title:\s*([^\n]+)/i);
-    if (titleMatch && titleMatch[1]) {
-      result.counterpointTitle = titleMatch[1].trim();
-      console.log('Extracted counterpoint title:', result.counterpointTitle);
-      // Remove the title line from the content
-      result.counterpoint = counterpointContent.replace(/Title:\s*[^\n]+\n*/i, '').trim();
-    } else {
-      // Try to find a title at the beginning of the counterpoint content
-      const firstLineMatch = counterpointContent.match(/^([^\.]+)\./);
-      if (firstLineMatch && firstLineMatch[1] && firstLineMatch[1].length < 50) {
-        result.counterpointTitle = firstLineMatch[1].trim();
-        console.log('Extracted counterpoint title from first line:', result.counterpointTitle);
-      }
-      result.counterpoint = counterpointContent;
-    }
+    result.counterpoint = counterpointContent;
+    result.counterpointTitle = '';
   } else {
     // Try alternative pattern for counterpoint
     const altCounterpointMatch = response.match(/Counterpoint:([\s\S]*?)$/i);
     if (altCounterpointMatch && altCounterpointMatch[1]) {
       const counterpointContent = altCounterpointMatch[1].trim();
       console.log('Extracted counterpoint content (alt):', counterpointContent);
-
-      // Extract title if present
-      const titleMatch = counterpointContent.match(/Title:\s*([^\n]+)/i);
-      if (titleMatch && titleMatch[1]) {
-        result.counterpointTitle = titleMatch[1].trim();
-        console.log('Extracted counterpoint title (alt):', result.counterpointTitle);
-        // Remove the title line from the content
-        result.counterpoint = counterpointContent.replace(/Title:\s*[^\n]+\n*/i, '').trim();
-      } else {
-        result.counterpoint = counterpointContent;
-      }
+      result.counterpoint = counterpointContent;
+      result.counterpointTitle = '';
     }
   }
 
   // If we still don't have titles, generate some based on the content
-  if (!result.pointTitle && result.point) {
-    result.pointTitle = "Key Perspective";
-    console.log('Generated default point title');
-  }
-
-  if (!result.counterpointTitle && result.counterpoint) {
-    result.counterpointTitle = "Alternative View";
-    console.log('Generated default counterpoint title');
-  }
+  result.pointTitle = '';
+  result.counterpointTitle = '';
 
   // Ensure we have all required fields
   if (!result.neutral) {
