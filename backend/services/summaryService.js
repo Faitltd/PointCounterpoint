@@ -83,7 +83,7 @@ Produce three sections:
 
 2. Point
    • Write a single, natural paragraph (3-5 sentences) supporting the article like a well-read fan, with at least two concrete specifics (names, numbers, locations, timing) before any interpretation.
-   • Do not include a standalone title line, do not repeat the headline verbatim, do not use quotation marks, and avoid stilted templates—make it read like a thoughtful take, not a form letter.
+   • Do not include a standalone title line, do not repeat the headline verbatim, do not use quotation marks anywhere, and avoid stilted templates—make it read like a thoughtful take, not a form letter.
    • Do NOT describe what a supporter “would highlight” or “would argue”—just give the take directly.
    • Emphasize why this perspective is enthusiastic, who would appreciate it, and one practical upside they’d highlight.
    • This should represent one reasonable interpretation or viewpoint on the issue.
@@ -95,7 +95,7 @@ Produce three sections:
 
 3. Counterpoint
    • Write a single, natural paragraph (3-5 sentences) explaining why an informed reader is not a fan of the article, citing specific details or tradeoffs they dislike, with at least two concrete specifics (names, numbers, locations, timing) before interpretation.
-   • Do not include a standalone title line, do not repeat the headline verbatim, do not use quotation marks, and avoid stilted templates—make it read like a thoughtful take, not a form letter.
+   • Do not include a standalone title line, do not repeat the headline verbatim, do not use quotation marks anywhere, and avoid stilted templates—make it read like a thoughtful take, not a form letter.
    • Do NOT describe what skeptics “would flag” or “would argue”—just state the opposing take directly.
    • Emphasize who would be skeptical, what feels weak or risky, and one practical caution or alternative they’d stress.
    • This should represent an opposing interpretation or viewpoint to the Point section.
@@ -168,21 +168,23 @@ Produce three sections:
 const generateFallbackPerspectives = (headline, content) => {
   console.log('Generating fallback perspectives for headline:', headline);
 
+  const cleanHeadline = headline.replace(/["“”]/g, '');
   // Create a simplified content summary
   const contentSummary = content.length > 100
     ? content.substring(0, 100) + '...'
     : content;
+  const cleanContentSummary = contentSummary.replace(/["“”]/g, '');
 
   return {
-    point: `${headline} moves the story forward: ${contentSummary}. This supportive take highlights immediate value for the people named and the place noted, building on recent momentum and clear wins. It underscores a practical upside for daily use or performance and treats this as progress that will compound.`,
+    point: `${cleanHeadline} moves the story forward: ${cleanContentSummary}. This supportive take highlights immediate value for the people named and the place noted, building on recent momentum and clear wins. It underscores a practical upside for daily use or performance and treats this as progress that will compound.`,
 
     pointTitle: `Supporters See Momentum`,
 
-    counterpoint: `${headline} also exposes gaps: ${contentSummary}. This skeptical take focuses on missing costs, tradeoffs, or who might lose out, pointing to how similar cases have stumbled. It surfaces a concrete risk like fees, delays, or inequitable impact and presses for a safeguard before calling it a win.`,
+    counterpoint: `${cleanHeadline} also exposes gaps: ${cleanContentSummary}. This skeptical take focuses on missing costs, tradeoffs, or who might lose out, pointing to how similar cases have stumbled. It surfaces a concrete risk like fees, delays, or inequitable impact and presses for a safeguard before calling it a win.`,
 
     counterpointTitle: `Skeptics Flag Tradeoffs`,
 
-    neutral: `The article outlines: ${contentSummary} Readers should review the full context and multiple sources for details on timing, scope, and stakeholders.`
+    neutral: `The article outlines: ${cleanContentSummary} Readers should review the full context and multiple sources for details on timing, scope, and stakeholders.`
   };
 };
 
@@ -385,6 +387,9 @@ const cleanContent = (content) => {
 
   // Remove markdown symbols (* and #)
   let cleaned = content.replace(/[*#]/g, '');
+
+  // Remove quotation marks
+  cleaned = cleaned.replace(/["“”]/g, '');
 
   // Remove TLDR references
   cleaned = cleaned.replace(/\bTLDR\b:?/gi, '').replace(/\bTL;DR\b:?/gi, '');
