@@ -73,6 +73,7 @@ Produce three sections:
 1. Factual Summary
    • Provide a factual, objective summary of the news without any bias.
    • Focus only on the key facts and context of the story.
+   • Include concrete specifics from the headline/summary (who, what, when, where, any numbers or names) rather than vague wording.
    • Do NOT reference any opposing viewpoints in this section.
    • This should be a straightforward summary of what happened.
    • Do NOT use markdown symbols like asterisks (*) or hash symbols (#).
@@ -83,6 +84,7 @@ Produce three sections:
    • Start with a provocative, attention-grabbing title (3-5 words) that captures this perspective.
    • Format the title as "Title: [Your Title Here]" on its own line.
    • Then write 3-5 sentences supporting the article like a well-read fan who can point to specific details and upside.
+   • Anchor the support in at least two concrete specifics from the headline/summary (names, numbers, locations, timing) before any interpretation.
    • Emphasize why this perspective is enthusiastic, who would appreciate it, and one practical upside they’d highlight.
    • This should represent one reasonable interpretation or viewpoint on the issue.
    • Do NOT default to political points of view unless the article is explicitly political.
@@ -95,6 +97,7 @@ Produce three sections:
    • Start with a provocative, attention-grabbing title (3-5 words) that captures this opposing perspective.
    • Format the title as "Title: [Your Title Here]" on its own line.
    • Then write 3-5 sentences explaining why an informed reader is not a fan of the article, citing specific details or tradeoffs they dislike.
+   • Anchor the critique in at least two concrete specifics from the headline/summary (names, numbers, locations, timing) before any interpretation.
    • Emphasize who would be skeptical, what feels weak or risky, and one practical caution or alternative they’d stress.
    • This should represent an opposing interpretation or viewpoint to the Point section.
    • Do NOT default to political points of view unless the article is explicitly political.
@@ -133,7 +136,7 @@ Produce three sections:
     const response = await anthropic.messages.create({
       model: 'claude-3-5-sonnet-20241022',
       max_tokens: 1500,
-      temperature: 0.7,
+      temperature: 0.5,
       system: systemPrompt,
       messages: [
         {
