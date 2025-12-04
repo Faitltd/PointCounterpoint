@@ -409,7 +409,7 @@ const fetchTopHeadlines = async (category = 'general') => {
     // Check if we have a valid NewsAPI key
     if (!NEWS_API_KEY) {
       console.log('No NewsAPI key found. Using mock data.');
-      return getMockArticles(category);
+      return [];
     }
 
     console.log(`Fetching news articles from NewsAPI for category: ${category}`);
@@ -445,16 +445,15 @@ const fetchTopHeadlines = async (category = 'general') => {
       }
 
       console.log('No articles found in NewsAPI response, falling back to mock data');
-      return getMockArticles(category);
+      return [];
     } catch (apiError) {
       console.error('Error calling NewsAPI:', apiError.message);
-      console.log('Falling back to mock data');
-      return getMockArticles(category);
+      console.log('Falling back to empty list');
+      return [];
     }
   } catch (error) {
     console.error('Error fetching news:', error.message);
-    // Always return some data to prevent the application from breaking
-    return getMockArticles(category);
+    return [];
   }
 };
 
