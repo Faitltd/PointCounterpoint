@@ -236,6 +236,14 @@ router.get('/headlines', async (req, res) => {
           .map(normalizeArticle)
           .filter(a => !excludeSet.has(a.id));
 
+        // If dedupe collapsed too far, fall back to normalized originals (even if some duplicates) to avoid samples
+        if (dedupedArticles.length < 4 && articles && articles.length > dedupedArticles.length) {
+          dedupedArticles = articles
+            .map(normalizeArticle)
+            .filter(a => !excludeSet.has(a.id));
+          console.log(`Dedupe too strict, using normalized originals count=${dedupedArticles.length}`);
+        }
+
         if (dedupedArticles.length < 4) {
           console.log(`Only ${dedupedArticles.length} unique from Supabase, pulling more from NewsAPI/Webz...`);
           const moreNews = await getRandomNewsApiArticles(15, category);
@@ -262,9 +270,16 @@ router.get('/headlines', async (req, res) => {
       // If no articles in Supabase, try NewsAPI
       console.log('No articles found in Supabase, trying NewsAPI...');
         const newsApiArticles = await getRandomNewsApiArticles(15, category);
-        const dedupedNewsApiArticles = dedupeArticles(newsApiArticles)
+      let dedupedNewsApiArticles = dedupeArticles(newsApiArticles)
           .map(normalizeArticle)
           .filter(a => !excludeSet.has(a.id));
+
+      if (dedupedNewsApiArticles.length < 4 && newsApiArticles.length > dedupedNewsApiArticles.length) {
+        dedupedNewsApiArticles = newsApiArticles
+          .map(normalizeArticle)
+          .filter(a => !excludeSet.has(a.id));
+        console.log(`Dedupe too strict on NewsAPI/Webz, using normalized originals count=${dedupedNewsApiArticles.length}`);
+      }
       console.log(`Retrieved ${newsApiArticles.length} articles from NewsAPI (${dedupedNewsApiArticles.length} after dedupe)`);
 
       // Save the NewsAPI articles to Supabase for future use
@@ -290,29 +305,15 @@ router.get('/headlines', async (req, res) => {
 
       let newsReturn = dedupedNewsApiArticles;
 
-      if (newsReturn.length < 4) {
-        console.log(`Only ${newsReturn.length} unique from NewsAPI/Webz, topping with samples...`);
-        const samples = category === 'all'
-          ? sampleArticles
-          : sampleArticles.filter(a => a.category === category);
-        newsReturn = dedupeArticles([...newsReturn, ...samples])
-          .map(normalizeArticle)
-          .filter(a => !excludeSet.has(a.id));
-      }
+      // No sample topping here; allow fewer results but real ids
 
       return res.json(newsReturn.slice(0, 5));
     } catch (apiError) {
       console.error('Error fetching articles:', apiError);
 
-      // Last resort: use sample data
-      console.log('Using sample data as fallback');
-      const filteredArticles = category === 'all'
-        ? dedupeArticles(sampleArticles)
-        : dedupeArticles(sampleArticles.filter(article => article.category === category));
-
-      // Shuffle and limit to 5 random articles
-      const shuffled = [...filteredArticles].sort(() => 0.5 - Math.random());
-      return res.json(shuffled.slice(0, 5));
+      // Last resort: return empty array instead of samples
+      console.log('No articles found; returning empty list to avoid sample placeholders');
+      return res.json([]);
     }
   } catch (error) {
     console.error('Error fetching headlines:', error);
@@ -346,9 +347,13 @@ router.get('/article/:id', async (req, res) => {
     }
 
     try {
-      // Try to get the article from Supabase
-      console.log(`Fetching article with ID: ${id} from Supabase`);
-      article = await getArticleById(id);
+      // Try to get the article from Supabase (only if UUID)
+      if (isUuid(id)) {
+        console.log(`Fetching article with ID: ${id} from Supabase`);
+        article = await getArticleById(id);
+      } else {
+        console.log('ID is not a UUID, skipping Supabase fetch');
+      }
 
       // If article found in Supabase and it's not a test article
       if (article && article.id !== TEST_ARTICLE_ID &&
@@ -435,14 +440,8 @@ router.get('/article/:id', async (req, res) => {
       }
     }
 
-    // Last resort: use sample data
-    console.log('Using sample data as fallback');
-    article = sampleArticles.find(a => a._id === id);
-
-    // If still not found, return 404
-    if (!article) {
-      return res.status(404).json({ message: 'Article not found' });
-    }
+    // Last resort: return 404 instead of sample to avoid placeholder perspectives
+    return res.status(404).json({ message: 'Article not found' });
 
     // Check if the sample article has perspectives
     if (!article.perspectives || article.perspectives.length === 0 || writingStyle !== 'standard') {
@@ -712,3 +711,5 @@ router.get('/local/:zipCode', async (req, res) => {
 });
 
 module.exports = router;
+// Simple UUID v4 check
+const isUuid = (id = '') => /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
