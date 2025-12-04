@@ -2,12 +2,12 @@
  * Test script for the generateDetailedPerspectives function with the new API key
  */
 
-const Anthropic = require('@anthropic-ai/sdk');
+const OpenAI = require('openai');
 
 // Create a direct instance of OpenAI for testing
 require('dotenv').config();
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
 });
 
 // Define the parseAnalysisResponse function directly
@@ -44,7 +44,7 @@ const parseAnalysisResponse = (response) => {
 
 async function testAPI() {
   try {
-    console.log('Testing Anthropic API with new key...');
+    console.log('Testing OpenAI API with new key...');
     console.log('Headline: New Climate Change Policy Announced');
     console.log('Content: The government announced a new climate change policy today that aims to reduce carbon emissions by 50% by 2030.');
 
@@ -70,12 +70,12 @@ Produce three sections, each as a single concise paragraph (3-4 sentences):
 
     // Race the API call against the timeout
     const response = await Promise.race([
-      anthropic.messages.create({
-        model: 'claude-3-5-sonnet-20241022',
+      openai.chat.completions.create({
+        model: 'gpt-4o-mini',
         max_tokens: 1000,
         temperature: 0.7,
-        system: systemPrompt,
         messages: [
+          { role: 'system', content: systemPrompt },
           {
             role: 'user',
             content: `Headline: New Climate Change Policy Announced\nSummary: The government announced a new climate change policy today that aims to reduce carbon emissions by 50% by 2030.`
@@ -87,7 +87,7 @@ Produce three sections, each as a single concise paragraph (3-4 sentences):
 
     console.log('API response received!');
 
-    const fullAnalysis = response.content[0].text.trim();
+    const fullAnalysis = response.choices[0].message.content.trim();
     console.log('\nRaw API Response:');
     console.log(fullAnalysis);
 

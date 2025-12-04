@@ -19,7 +19,7 @@ steps:
       - '--platform=managed'
       - '--allow-unauthenticated'
       - '--set-env-vars=SUPABASE_URL=https://ydisdyadjupyswcpbxzu.supabase.co'
-      - '--update-secrets=ANTHROPIC_API_KEY=anthropic-api-key:latest,NEWS_API_KEY=news-api-key:latest,SUPABASE_KEY=supabase-key:latest'
+      - '--update-secrets=OPENAI_API_KEY=openai-api-key:latest,NEWS_API_KEY=news-api-key:latest,SUPABASE_KEY=supabase-key:latest'
       - '--timeout=5m'
       - '--concurrency=80'
       - '--cpu=1'
