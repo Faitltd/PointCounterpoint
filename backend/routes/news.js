@@ -196,9 +196,14 @@ const normalizeArticle = (article = {}) => {
 // Get headlines by category
 router.get('/headlines', async (req, res) => {
   try {
-    const { category = 'general', writingStyle = 'standard' } = req.query;
+    const { category = 'general', writingStyle = 'standard', excludeIds = '' } = req.query;
     console.log(`Received request for headlines in category: ${category}`);
     console.log(`Using writing style: ${writingStyle}`);
+    const excludeSet = new Set(
+      typeof excludeIds === 'string' && excludeIds.length > 0
+        ? excludeIds.split(',').map(id => id.trim()).filter(Boolean)
+        : []
+    );
 
     try {
       // First try to get articles from Supabase
@@ -227,12 +232,16 @@ router.get('/headlines', async (req, res) => {
 
       if (articles && articles.length > 0) {
         // Deduplicate and ensure at least 4 unique stories
-        let dedupedArticles = dedupeArticles(articles).map(normalizeArticle);
+        let dedupedArticles = dedupeArticles(articles)
+          .map(normalizeArticle)
+          .filter(a => !excludeSet.has(a.id));
 
         if (dedupedArticles.length < 4) {
           console.log(`Only ${dedupedArticles.length} unique from Supabase, pulling more from NewsAPI/Webz...`);
           const moreNews = await getRandomNewsApiArticles(15, category);
-          dedupedArticles = dedupeArticles([...dedupedArticles, ...moreNews]);
+          dedupedArticles = dedupeArticles([...dedupedArticles, ...moreNews])
+            .map(normalizeArticle)
+            .filter(a => !excludeSet.has(a.id));
         }
 
         // As a final guard, top up with sample articles if still low
@@ -240,7 +249,9 @@ router.get('/headlines', async (req, res) => {
           const samples = category === 'all'
             ? sampleArticles
             : sampleArticles.filter(a => a.category === category);
-          dedupedArticles = dedupeArticles([...dedupedArticles, ...samples]);
+          dedupedArticles = dedupeArticles([...dedupedArticles, ...samples])
+            .map(normalizeArticle)
+            .filter(a => !excludeSet.has(a.id));
         }
 
         const limitedArticles = dedupedArticles.slice(0, 5);
@@ -250,8 +261,10 @@ router.get('/headlines', async (req, res) => {
 
       // If no articles in Supabase, try NewsAPI
       console.log('No articles found in Supabase, trying NewsAPI...');
-      const newsApiArticles = await getRandomNewsApiArticles(15, category);
-      const dedupedNewsApiArticles = dedupeArticles(newsApiArticles).map(normalizeArticle);
+        const newsApiArticles = await getRandomNewsApiArticles(15, category);
+        const dedupedNewsApiArticles = dedupeArticles(newsApiArticles)
+          .map(normalizeArticle)
+          .filter(a => !excludeSet.has(a.id));
       console.log(`Retrieved ${newsApiArticles.length} articles from NewsAPI (${dedupedNewsApiArticles.length} after dedupe)`);
 
       // Save the NewsAPI articles to Supabase for future use
@@ -282,7 +295,9 @@ router.get('/headlines', async (req, res) => {
         const samples = category === 'all'
           ? sampleArticles
           : sampleArticles.filter(a => a.category === category);
-        newsReturn = dedupeArticles([...newsReturn, ...samples]);
+        newsReturn = dedupeArticles([...newsReturn, ...samples])
+          .map(normalizeArticle)
+          .filter(a => !excludeSet.has(a.id));
       }
 
       return res.json(newsReturn.slice(0, 5));

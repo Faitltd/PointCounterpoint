@@ -22,7 +22,7 @@ function SummaryView({ writingStyle: globalWritingStyle }) {
 
         // Add a timestamp to prevent caching
         const response = await axios.get(apiUrl, {
-          params: { _t: new Date().getTime() },
+          params: { _t: new Date().getTime(), writingStyle: globalWritingStyle },
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json'

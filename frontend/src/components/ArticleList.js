@@ -79,7 +79,8 @@ function ArticleList({ articles, loading, error, onRefresh, writingStyle, onWrit
   // Handle refresh button click
   const handleRefresh = () => {
     setLastRefreshTime(new Date());
-    onRefresh();
+    const idsToExclude = filteredArticles.map(a => a.id).filter(Boolean);
+    onRefresh(idsToExclude);
   };
 
   // Handle category click

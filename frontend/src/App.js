@@ -24,7 +24,7 @@ function App() {
     fetchArticles(currentCategory);
   }, [currentCategory, globalWritingStyle]);
 
-  const fetchArticles = async (category) => {
+  const fetchArticles = async (category, excludeIds = []) => {
     setLoading(true);
 
     try {
@@ -35,7 +35,8 @@ function App() {
       const response = await axios.get(apiUrl, {
         params: {
           category,
-          writingStyle: globalWritingStyle
+          writingStyle: globalWritingStyle,
+          excludeIds: excludeIds.join(',')
         },
         headers: {
           'Content-Type': 'application/json',
@@ -118,7 +119,7 @@ function App() {
                 articles={articles}
                 loading={loading}
                 error={error}
-                onRefresh={() => fetchArticles(currentCategory)}
+                onRefresh={(ids) => fetchArticles(currentCategory, ids)}
                 writingStyle={globalWritingStyle}
                 onWritingStyleChange={handleWritingStyleChange}
                 onCategoryChange={handleCategoryChange}
@@ -133,7 +134,7 @@ function App() {
                 articles={articles}
                 loading={loading}
                 error={error}
-                onRefresh={() => fetchArticles(currentCategory)}
+                onRefresh={(ids) => fetchArticles(currentCategory, ids)}
                 writingStyle={globalWritingStyle}
                 onWritingStyleChange={handleWritingStyleChange}
                 onCategoryChange={handleCategoryChange}
