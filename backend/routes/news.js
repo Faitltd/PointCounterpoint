@@ -366,14 +366,19 @@ router.get('/article/:id', async (req, res) => {
           );
 
         const hasLowQuality = Array.isArray(article.perspectives) &&
-          article.perspectives.some(p =>
-            typeof p.summary === 'string' &&
-            (
-              p.summary.trim().toLowerCase() === (article.title || '').trim().toLowerCase() ||
-              p.summary.toLowerCase().includes('moves the story forward') ||
-              p.summary.toLowerCase().includes('also exposes gaps')
-            )
-          );
+          article.perspectives.some(p => {
+            if (typeof p.summary !== 'string') return false;
+            const s = p.summary.toLowerCase().trim();
+            return (
+              s === (article.title || '').trim().toLowerCase() ||
+              s.includes('moves the story forward') ||
+              s.includes('also exposes gaps') ||
+              s.includes('supportive take highlights immediate value') ||
+              s.includes('critical read calls out the missing costs') ||
+              s.includes('supporters see momentum') ||
+              s.includes('skeptics flag tradeoffs')
+            );
+          });
 
         if (!article.perspectives || article.perspectives.length === 0 || writingStyle !== 'standard' || hasGenericFallback || hasLowQuality) {
           console.log(`Generating perspectives for article with style: ${writingStyle}... (regenerate=${hasGenericFallback || hasLowQuality})`);
@@ -510,8 +515,12 @@ async function generateAndSavePerspectives(article, writingStyle = 'standard') {
       ];
     }
 
-    // Add perspectives to the article object
-    article.perspectives = perspectivesArray;
+    // Force titles blank to avoid duplication in UI
+    article.perspectives = perspectivesArray.map(p => ({
+      ...p,
+      pointTitle: '',
+      counterpointTitle: ''
+    }));
     console.log('Added perspectives to article object:', perspectivesArray.length);
 
     // Save perspectives to Supabase if the article has an ID
