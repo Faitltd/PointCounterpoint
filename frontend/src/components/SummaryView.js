@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
-import WritingStyleDropdown from './WritingStyleDropdown.js';
 import './NewspaperView.css';
 
-function SummaryView({ writingStyle: globalWritingStyle }) {
+function SummaryView() {
   const { id } = useParams();
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -22,7 +21,7 @@ function SummaryView({ writingStyle: globalWritingStyle }) {
 
         // Add a timestamp to prevent caching
         const response = await axios.get(apiUrl, {
-          params: { _t: new Date().getTime(), writingStyle: globalWritingStyle },
+          params: { _t: new Date().getTime() },
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
@@ -51,7 +50,7 @@ function SummaryView({ writingStyle: globalWritingStyle }) {
     };
 
     fetchArticle();
-  }, [id, globalWritingStyle]);
+  }, [id]);
 
 
 

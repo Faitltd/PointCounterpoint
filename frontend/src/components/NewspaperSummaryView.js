@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
-import WritingStyleDropdown from './WritingStyleDropdown.js';
 import './NewspaperView.css';
 import config from '../config.js'; // Import API configuration
 import { createCategoryUrl, slugify } from '../utils/urlUtils.js';
 import { sampleArticleDetails, writingStylePerspectives } from '../sampleData.js';
 
-function NewspaperSummaryView({ writingStyle: globalWritingStyle, onCategoryChange }) {
+function NewspaperSummaryView({ onCategoryChange }) {
   const { id, slug } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -38,9 +37,6 @@ function NewspaperSummaryView({ writingStyle: globalWritingStyle, onCategoryChan
         const apiUrl = `${backendUrl}/api/news/article/${id}`;
 
         const response = await axios.get(apiUrl, {
-          params: {
-            writingStyle: globalWritingStyle
-          },
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
@@ -98,10 +94,10 @@ function NewspaperSummaryView({ writingStyle: globalWritingStyle, onCategoryChan
     };
 
     fetchArticle();
-  }, [id, slug, navigate, globalWritingStyle]);
+  }, [id, slug, navigate]);
 
-  const regeneratePerspectives = async (articleData, style) => {
-    console.log('Simulating perspective generation with style:', style);
+  const regeneratePerspectives = async (articleData) => {
+    console.log('Simulating perspective regeneration');
     console.log('Article ID:', id);
 
     setRegenerating(true);
@@ -111,7 +107,7 @@ function NewspaperSummaryView({ writingStyle: globalWritingStyle, onCategoryChan
       await new Promise(resolve => setTimeout(resolve, 1500));
 
       // Get perspectives for the selected writing style
-      let newPerspectives = writingStylePerspectives[style] || [
+      let newPerspectives = writingStylePerspectives['standard'] || [
         {
           viewpoint: 'point',
           summary: 'This is a standard perspective on the topic that presents one viewpoint. The evidence suggests this interpretation has merit based on the available facts. Experts in the field have noted similar conclusions in their analysis of comparable situations.'
@@ -126,7 +122,7 @@ function NewspaperSummaryView({ writingStyle: globalWritingStyle, onCategoryChan
         }
       ];
 
-      console.log('Generated new perspectives for style:', style);
+      console.log('Generated new perspectives');
 
       // Create updated article with new perspectives
       const updatedArticle = {
@@ -273,7 +269,7 @@ function NewspaperSummaryView({ writingStyle: globalWritingStyle, onCategoryChan
           <h3 className="generate-button-heading">Perspectives not available for this article</h3>
           <button
             className="regenerate-button"
-            onClick={() => regeneratePerspectives(article, globalWritingStyle)}
+            onClick={() => regeneratePerspectives(article)}
             disabled={regenerating}
           >
             {regenerating ? 'Generating Perspectives...' : 'Generate Point/Counterpoint Perspectives'}

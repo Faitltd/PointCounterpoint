@@ -1,10 +1,10 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import WritingStyleDropdown from './WritingStyleDropdown.js';
 import ZipCodeInput from './ZipCodeInput.js';
 import { createArticleUrl, createCategoryUrl } from '../utils/urlUtils.js';
 
 function ArticleList({ articles, loading, error, onRefresh, writingStyle, onWritingStyleChange, onCategoryChange, currentCategory = 'general', onZipCodeSubmit }) {
+function ArticleList({ articles, loading, error, onRefresh, onCategoryChange, currentCategory = 'general', onZipCodeSubmit }) {
   const [lastRefreshTime, setLastRefreshTime] = useState(new Date());
   const [timeAgo, setTimeAgo] = useState('');
   const navigate = useNavigate();
@@ -179,12 +179,6 @@ function ArticleList({ articles, loading, error, onRefresh, writingStyle, onWrit
                 {loading ? 'Refreshing...' : 'Refresh Stories'}
               </button>
               <p className="last-refreshed">Last refreshed: {timeAgo}</p>
-            </div>
-            <div className="style-container">
-              <WritingStyleDropdown
-                selectedStyle={writingStyle}
-                onStyleChange={onWritingStyleChange}
-              />
             </div>
           </div>
         </div>

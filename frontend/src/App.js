@@ -18,11 +18,10 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentCategory, setCurrentCategory] = useState('general');
-  const [globalWritingStyle, setGlobalWritingStyle] = useState('standard');
 
   useEffect(() => {
     fetchArticles(currentCategory);
-  }, [currentCategory, globalWritingStyle]);
+  }, [currentCategory]);
 
   const fetchArticles = async (category, excludeIds = []) => {
     setLoading(true);
@@ -35,7 +34,6 @@ function App() {
       const response = await axios.get(apiUrl, {
         params: {
           category,
-          writingStyle: globalWritingStyle,
           excludeIds: excludeIds.join(',')
         },
         headers: {
@@ -56,11 +54,6 @@ function App() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleWritingStyleChange = (style) => {
-    console.log(`Changing global writing style to: ${style}`);
-    setGlobalWritingStyle(style);
   };
 
   const handleCategoryChange = (category) => {
@@ -120,8 +113,6 @@ function App() {
                 loading={loading}
                 error={error}
                 onRefresh={(ids) => fetchArticles(currentCategory, ids)}
-                writingStyle={globalWritingStyle}
-                onWritingStyleChange={handleWritingStyleChange}
                 onCategoryChange={handleCategoryChange}
                 currentCategory={currentCategory}
                 onZipCodeSubmit={handleZipCodeSubmit}
@@ -135,8 +126,6 @@ function App() {
                 loading={loading}
                 error={error}
                 onRefresh={(ids) => fetchArticles(currentCategory, ids)}
-                writingStyle={globalWritingStyle}
-                onWritingStyleChange={handleWritingStyleChange}
                 onCategoryChange={handleCategoryChange}
                 currentCategory={currentCategory}
                 onZipCodeSubmit={handleZipCodeSubmit}
@@ -146,7 +135,6 @@ function App() {
             <Route
               path="/article/:id/:slug"
               element={<NewspaperSummaryView
-                writingStyle={globalWritingStyle}
                 onCategoryChange={handleCategoryChange}
               />}
             />
@@ -154,7 +142,6 @@ function App() {
             <Route
               path="/article/:id"
               element={<NewspaperSummaryView
-                writingStyle={globalWritingStyle}
                 onCategoryChange={handleCategoryChange}
               />}
             />

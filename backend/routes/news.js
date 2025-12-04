@@ -196,9 +196,8 @@ const normalizeArticle = (article = {}) => {
 // Get headlines by category
 router.get('/headlines', async (req, res) => {
   try {
-    const { category = 'general', writingStyle = 'standard', excludeIds = '' } = req.query;
+    const { category = 'general', excludeIds = '' } = req.query;
     console.log(`Received request for headlines in category: ${category}`);
-    console.log(`Using writing style: ${writingStyle}`);
     const excludeSet = new Set(
       typeof excludeIds === 'string' && excludeIds.length > 0
         ? excludeIds.split(',').map(id => id.trim()).filter(Boolean)
@@ -465,7 +464,7 @@ async function generateAndSavePerspectives(article, writingStyle = 'standard') {
     const perspectives = await generateDetailedPerspectives(
       article.title,
       article.content || 'No content available',
-      writingStyle
+      'standard'
     );
 
     console.log('Perspectives generated successfully:', perspectives ? 'Yes' : 'No');
@@ -559,9 +558,7 @@ async function generateAndSavePerspectives(article, writingStyle = 'standard') {
 router.post('/regenerate/:id', async (req, res) => {
   try {
     const id = req.params.id;
-    const { writingStyle } = req.body;
-
-    console.log(`Regenerating perspectives for article ID: ${id} with writing style: ${writingStyle}`);
+    console.log(`Regenerating perspectives for article ID: ${id}`);
 
     // Get the article from Supabase
     let article = await getArticleById(id);
@@ -574,7 +571,7 @@ router.post('/regenerate/:id', async (req, res) => {
     const perspectives = await generateDetailedPerspectives(
       article.title,
       article.content || 'No content available',
-      writingStyle
+      'standard'
     );
 
     console.log('Perspectives regenerated successfully:', perspectives ? 'Yes' : 'No');
