@@ -278,8 +278,17 @@ router.get('/article/:id', async (req, res) => {
         console.log('Article found in Supabase');
 
         // Check if the article has perspectives
-        if (!article.perspectives || article.perspectives.length === 0 || writingStyle !== 'standard') {
-          console.log(`Generating perspectives for article with style: ${writingStyle}...`);
+        const hasGenericFallback = Array.isArray(article.perspectives) &&
+          article.perspectives.some(p =>
+            typeof p.summary === 'string' &&
+            (
+              p.summary.toLowerCase().includes('could be viewed as a positive development with several potential benefits') ||
+              p.summary.toLowerCase().includes('raises several important questions and potential concerns that should be carefully considered')
+            )
+          );
+
+        if (!article.perspectives || article.perspectives.length === 0 || writingStyle !== 'standard' || hasGenericFallback) {
+          console.log(`Generating perspectives for article with style: ${writingStyle}... (regenerate=${hasGenericFallback})`);
           await generateAndSavePerspectives(article, writingStyle);
         }
 
