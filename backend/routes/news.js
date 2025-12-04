@@ -204,15 +204,31 @@ router.get('/headlines', async (req, res) => {
       }
 
       if (articles && articles.length > 0) {
-        // Deduplicate by URL/title/source and limit to 5
-      const limitedArticles = dedupeArticles(articles).slice(0, 5);
-        console.log(`Returning ${limitedArticles.length} articles after dedupe`);
+        // Deduplicate and ensure at least 4 unique stories
+        let dedupedArticles = dedupeArticles(articles);
+
+        if (dedupedArticles.length < 4) {
+          console.log(`Only ${dedupedArticles.length} unique from Supabase, pulling more from NewsAPI/Webz...`);
+          const moreNews = await getRandomNewsApiArticles(15, category);
+          dedupedArticles = dedupeArticles([...dedupedArticles, ...moreNews]);
+        }
+
+        // As a final guard, top up with sample articles if still low
+        if (dedupedArticles.length < 4) {
+          const samples = category === 'all'
+            ? sampleArticles
+            : sampleArticles.filter(a => a.category === category);
+          dedupedArticles = dedupeArticles([...dedupedArticles, ...samples]);
+        }
+
+        const limitedArticles = dedupedArticles.slice(0, 5);
+        console.log(`Returning ${limitedArticles.length} articles after dedupe/topping`);
         return res.json(limitedArticles);
       }
 
       // If no articles in Supabase, try NewsAPI
       console.log('No articles found in Supabase, trying NewsAPI...');
-      const newsApiArticles = await getRandomNewsApiArticles(5, category);
+      const newsApiArticles = await getRandomNewsApiArticles(15, category);
       const dedupedNewsApiArticles = dedupeArticles(newsApiArticles);
       console.log(`Retrieved ${newsApiArticles.length} articles from NewsAPI (${dedupedNewsApiArticles.length} after dedupe)`);
 
@@ -237,7 +253,17 @@ router.get('/headlines', async (req, res) => {
         }
       }
 
-      return res.json(dedupedNewsApiArticles.slice(0, 5));
+      let newsReturn = dedupedNewsApiArticles;
+
+      if (newsReturn.length < 4) {
+        console.log(`Only ${newsReturn.length} unique from NewsAPI/Webz, topping with samples...`);
+        const samples = category === 'all'
+          ? sampleArticles
+          : sampleArticles.filter(a => a.category === category);
+        newsReturn = dedupeArticles([...newsReturn, ...samples]);
+      }
+
+      return res.json(newsReturn.slice(0, 5));
     } catch (apiError) {
       console.error('Error fetching articles:', apiError);
 
