@@ -6,6 +6,85 @@ const NEWS_API_KEY = process.env.NEWS_API_KEY;
 const NEWS_API_URL = 'https://newsapi.org/v2';
 const WEBZIO_API_KEY = process.env.WEBZIO_API_KEY;
 const WEBZIO_API_URL = 'https://api.webz.io/news-api/v1/search';
+const GNEWS_API_KEY = process.env.GNEWS_API_KEY;
+const GNEWS_API_URL = 'https://gnews.io/api/v4';
+const THE_NEWS_API_KEY = process.env.THE_NEWS_API_KEY;
+const THE_NEWS_API_URL = 'https://api.thenewsapi.com/v1/news';
+
+const makeArticle = ({
+  provider = 'news',
+  title,
+  url,
+  sourceName,
+  sourceUrl,
+  publishedAt,
+  content,
+  category,
+  index = 0
+}) => {
+  const normalizedUrl = url || sourceUrl || '';
+  const publishedDate = publishedAt ? new Date(publishedAt) : new Date();
+  const safeDate = isNaN(publishedDate.getTime()) ? new Date() : publishedDate;
+
+  return {
+    _id: `${provider}-${Date.now()}-${index}-${Math.floor(Math.random() * 1000)}`,
+    title: title || 'Untitled Article',
+    source: {
+      name: sourceName || 'Unknown Source',
+      url: sourceUrl || normalizedUrl
+    },
+    url: normalizedUrl,
+    publishedAt: safeDate,
+    content: content || '',
+    category,
+    perspectives: [],
+    source_name: sourceName || 'Unknown Source',
+    source_url: sourceUrl || normalizedUrl
+  };
+};
+
+const dedupeArticles = (articles = []) => {
+  const seen = new Set();
+  return articles.filter(article => {
+    const title = (article.title || '').toLowerCase();
+    const source = (article.source_name || article.source?.name || '').toLowerCase();
+    const url = (article.url || '').toLowerCase();
+    const key = `${url}|${title}|${source}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
+
+const mapCategoryToGNewsTopic = (category = 'general') => {
+  const map = {
+    general: 'general',
+    world: 'world',
+    politics: 'nation',
+    business: 'business',
+    technology: 'technology',
+    entertainment: 'entertainment',
+    sports: 'sports',
+    science: 'science',
+    health: 'health'
+  };
+  return map[category] || 'general';
+};
+
+const mapCategoryToTheNewsApi = (category = 'general') => {
+  const map = {
+    general: 'general',
+    world: 'world',
+    politics: 'politics',
+    business: 'business',
+    technology: 'tech',
+    entertainment: 'entertainment',
+    sports: 'sports',
+    science: 'science',
+    health: 'health'
+  };
+  return map[category] || 'general';
+};
 
 // Mock data for when the API key is missing or invalid
 const MOCK_ARTICLES = {
@@ -394,63 +473,38 @@ const MOCK_ARTICLES = {
  * @param {string} category - News category (general, business, technology, etc.)
  * @returns {Promise<Array>} - Array of news articles
  */
-const fetchTopHeadlines = async (category = 'general') => {
+const fetchTopHeadlines = async (category = 'general', count = 10) => {
   try {
-    // Prefer Webz.io if key is present
+    let results = [];
+
+    // Webz.io
     if (WEBZIO_API_KEY) {
-      console.log(`Fetching news articles from Webz.io for category: ${category}`);
-      const webzArticles = await fetchFromWebz(category);
-      if (webzArticles.length > 0) {
-        return webzArticles;
-      }
-      console.log('Webz.io returned no articles, falling back to NewsAPI...');
+      const webzArticles = await fetchFromWebz(category, count);
+      results = results.concat(webzArticles);
     }
 
-    // Check if we have a valid NewsAPI key
-    if (!NEWS_API_KEY) {
-      console.log('No NewsAPI key found. Using mock data.');
-      return [];
+    // NewsAPI.org
+    if (NEWS_API_KEY) {
+      const newsApiArticles = await fetchFromNewsApiOrg(category, count);
+      results = results.concat(newsApiArticles);
     }
 
-    console.log(`Fetching news articles from NewsAPI for category: ${category}`);
-
-    try {
-      const response = await axios.get(`${NEWS_API_URL}/top-headlines`, {
-        params: {
-          country: 'us',
-          category,
-          apiKey: NEWS_API_KEY,
-          pageSize: 20
-        }
-      });
-
-      if (response.data.status === 'ok' && response.data.articles.length > 0) {
-        console.log(`Retrieved ${response.data.articles.length} articles from NewsAPI`);
-
-        // Transform the response to match our Article model
-        return response.data.articles.map((article, index) => ({
-          _id: `news-api-${Date.now()}-${index}`,
-          title: article.title || 'Untitled Article',
-          source: {
-            name: article.source.name || 'Unknown Source',
-            url: article.url
-          },
-          url: article.url,
-          publishedAt: new Date(article.publishedAt || Date.now()),
-          content: article.content || article.description || 'No content available',
-          category,
-          // We'll generate perspectives later when the article is viewed
-          perspectives: []
-        }));
-      }
-
-      console.log('No articles found in NewsAPI response, falling back to mock data');
-      return [];
-    } catch (apiError) {
-      console.error('Error calling NewsAPI:', apiError.message);
-      console.log('Falling back to empty list');
-      return [];
+    // GNews
+    if (GNEWS_API_KEY) {
+      const gnewsArticles = await fetchFromGNews(category, count);
+      results = results.concat(gnewsArticles);
     }
+
+    // TheNewsAPI
+    if (THE_NEWS_API_KEY) {
+      const theNewsApiArticles = await fetchFromTheNewsApi(category, count);
+      results = results.concat(theNewsApiArticles);
+    }
+
+    // Deduplicate and limit
+    const deduped = dedupeArticles(results).slice(0, count);
+    console.log(`Aggregated ${deduped.length} unique articles for category ${category}`);
+    return deduped;
   } catch (error) {
     console.error('Error fetching news:', error.message);
     return [];
@@ -462,14 +516,14 @@ const fetchTopHeadlines = async (category = 'general') => {
  * @param {string} category - News category
  * @returns {Promise<Array>} - Array of news articles
  */
-const fetchFromWebz = async (category = 'general') => {
+const fetchFromWebz = async (category = 'general', count = 10) => {
   try {
     const response = await axios.get(WEBZIO_API_URL, {
       params: {
         token: WEBZIO_API_KEY,
         q: `site_type:news AND language:english AND category:${category}`,
         sort: 'published',
-        size: 20
+        size: Math.max(count * 2, 20)
       }
     });
 
@@ -480,21 +534,148 @@ const fetchFromWebz = async (category = 'general') => {
       return [];
     }
 
-    return posts.map((post, index) => ({
-      _id: `webz-${Date.now()}-${index}`,
+    return posts.map((post, index) => makeArticle({
+      provider: 'webz',
       title: post.title || 'Untitled Article',
-      source: {
-        name: post.thread?.site_full || post.source?.title || 'Unknown Source',
-        url: post.thread?.site || post.url
-      },
       url: post.url || post.thread?.url || post.canonical_url || post.link,
-      publishedAt: post.published ? new Date(post.published) : new Date(),
-      content: post.text || post.excerpt || post.summary || 'No content available',
+      sourceName: post.thread?.site_full || post.source?.title || 'Unknown Source',
+      sourceUrl: post.thread?.site || post.url,
+      publishedAt: post.published,
+      content: post.text || post.excerpt || post.summary || '',
       category,
-      perspectives: []
+      index
     }));
   } catch (error) {
     console.error('Error calling Webz.io:', error.message);
+    return [];
+  }
+};
+
+/**
+ * Fetch articles from NewsAPI.org
+ * @param {string} category - News category
+ * @param {number} count - Desired number of articles
+ * @returns {Promise<Array>} - Array of news articles
+ */
+const fetchFromNewsApiOrg = async (category = 'general', count = 10) => {
+  try {
+    const params = {
+      apiKey: NEWS_API_KEY,
+      country: 'us',
+      pageSize: Math.max(count * 2, 20)
+    };
+
+    if (category && category !== 'all') {
+      params.category = category;
+    }
+
+    const response = await axios.get(`${NEWS_API_URL}/top-headlines`, { params });
+    const articles = response.data?.articles || [];
+
+    if (!Array.isArray(articles) || articles.length === 0) {
+      console.log('NewsAPI.org returned no articles');
+      return [];
+    }
+
+    return articles.map((article, index) => makeArticle({
+      provider: 'newsapi',
+      title: article.title,
+      url: article.url,
+      sourceName: article.source?.name || article.author || 'NewsAPI',
+      sourceUrl: article.url,
+      publishedAt: article.publishedAt || article.published_at || article.date,
+      content: article.content || article.description || '',
+      category,
+      index
+    }));
+  } catch (error) {
+    console.error('Error calling NewsAPI.org:', error.message);
+    return [];
+  }
+};
+
+/**
+ * Fetch articles from GNews
+ * @param {string} category - News category
+ * @param {number} count - Desired number of articles
+ * @returns {Promise<Array>} - Array of news articles
+ */
+const fetchFromGNews = async (category = 'general', count = 10) => {
+  try {
+    const topic = mapCategoryToGNewsTopic(category);
+    const response = await axios.get(`${GNEWS_API_URL}/top-headlines`, {
+      params: {
+        apikey: GNEWS_API_KEY,
+        lang: 'en',
+        country: 'us',
+        topic,
+        max: Math.min(Math.max(count * 2, 10), 50)
+      }
+    });
+
+    const articles = response.data?.articles || [];
+
+    if (!Array.isArray(articles) || articles.length === 0) {
+      console.log('GNews returned no articles');
+      return [];
+    }
+
+    return articles.map((article, index) => makeArticle({
+      provider: 'gnews',
+      title: article.title,
+      url: article.url,
+      sourceName: article.source?.name || 'GNews',
+      sourceUrl: article.source?.url || article.url,
+      publishedAt: article.publishedAt || article.published_at || article.published,
+      content: article.description || article.content || article.summary || '',
+      category,
+      index
+    }));
+  } catch (error) {
+    console.error('Error calling GNews:', error.message);
+    return [];
+  }
+};
+
+/**
+ * Fetch articles from TheNewsAPI
+ * @param {string} category - News category
+ * @param {number} count - Desired number of articles
+ * @returns {Promise<Array>} - Array of news articles
+ */
+const fetchFromTheNewsApi = async (category = 'general', count = 10) => {
+  try {
+    const categories = mapCategoryToTheNewsApi(category);
+    const response = await axios.get(`${THE_NEWS_API_URL}/top`, {
+      params: {
+        locale: 'us',
+        language: 'en',
+        categories,
+        api_token: THE_NEWS_API_KEY,
+        limit: Math.max(count * 2, 20)
+      }
+    });
+
+    const articles = response.data?.data || [];
+
+    if (!Array.isArray(articles) || articles.length === 0) {
+      console.log('TheNewsAPI returned no articles');
+      return [];
+    }
+
+    return articles.map((article, index) => makeArticle({
+      provider: 'thenewsapi',
+      title: article.title,
+      url: article.url,
+      sourceName: (article.source && (article.source.title || article.source.name)) || article.source || 'TheNewsAPI',
+      sourceUrl: (article.source && article.source.url) || article.url,
+      publishedAt: article.published_at || article.date,
+      content: article.snippet || article.description || article.content || '',
+      category,
+      index
+    }));
+  } catch (error) {
+    console.error('Error calling TheNewsAPI:', error.message);
     return [];
   }
 };
@@ -540,9 +721,9 @@ const getMockArticles = (category = 'general') => {
  * @param {string} category - News category
  * @returns {Promise<Array>} - Array of random news articles
  */
-const getRandomArticles = async (count = 5, category = 'general') => {
+const getRandomArticles = async (count = 10, category = 'general') => {
   try {
-    const articles = await fetchTopHeadlines(category);
+    const articles = await fetchTopHeadlines(category, count);
 
     // Shuffle the articles and return the requested count
     return shuffleArray(articles).slice(0, count);
@@ -659,5 +840,8 @@ module.exports = {
   fetchTopHeadlines,
   getRandomArticles,
   fetchLocalNews,
-  fetchFromWebz
+  fetchFromWebz,
+  fetchFromNewsApiOrg,
+  fetchFromGNews,
+  fetchFromTheNewsApi
 };
