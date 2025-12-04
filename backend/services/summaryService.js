@@ -74,6 +74,7 @@ Produce three sections:
    • Provide a factual, objective summary of the news without any bias.
    • Focus only on the key facts and context of the story.
    • Include concrete specifics from the headline/summary (who, what, when, where, any numbers or names) rather than vague wording.
+   • Paraphrase naturally; do not wrap text in quotation marks or repeat the headline verbatim.
    • Do NOT reference any opposing viewpoints in this section.
    • This should be a straightforward summary of what happened.
    • Do NOT use markdown symbols like asterisks (*) or hash symbols (#).
@@ -83,8 +84,8 @@ Produce three sections:
 2. Point
    • Start with a provocative, attention-grabbing title (3-5 words) that captures this perspective.
    • Format the title as "Title: [Your Title Here]" on its own line.
-   • Then write 3-5 sentences supporting the article like a well-read fan who can point to specific details and upside.
-   • Anchor the support in at least two concrete specifics from the headline/summary (names, numbers, locations, timing) before any interpretation.
+   • Then write a single, natural paragraph (3-5 sentences) supporting the article like a well-read fan, with at least two concrete specifics (names, numbers, locations, timing) before any interpretation.
+   • Do not repeat the headline verbatim, do not use quotation marks, and avoid stilted templates—make it read like a thoughtful take, not a form letter.
    • Emphasize why this perspective is enthusiastic, who would appreciate it, and one practical upside they’d highlight.
    • This should represent one reasonable interpretation or viewpoint on the issue.
    • Do NOT default to political points of view unless the article is explicitly political.
@@ -96,8 +97,8 @@ Produce three sections:
 3. Counterpoint
    • Start with a provocative, attention-grabbing title (3-5 words) that captures this opposing perspective.
    • Format the title as "Title: [Your Title Here]" on its own line.
-   • Then write 3-5 sentences explaining why an informed reader is not a fan of the article, citing specific details or tradeoffs they dislike.
-   • Anchor the critique in at least two concrete specifics from the headline/summary (names, numbers, locations, timing) before any interpretation.
+   • Then write a single, natural paragraph (3-5 sentences) explaining why an informed reader is not a fan of the article, citing specific details or tradeoffs they dislike, with at least two concrete specifics (names, numbers, locations, timing) before interpretation.
+   • Do not repeat the headline verbatim, do not use quotation marks, and avoid stilted templates—make it read like a thoughtful take, not a form letter.
    • Emphasize who would be skeptical, what feels weak or risky, and one practical caution or alternative they’d stress.
    • This should represent an opposing interpretation or viewpoint to the Point section.
    • Do NOT default to political points of view unless the article is explicitly political.
@@ -175,15 +176,15 @@ const generateFallbackPerspectives = (headline, content) => {
     : content;
 
   return {
-    point: `Title: Promising Progress Ahead\n${headline} highlights a concrete change: ${contentSummary}. For supporters, a refreshed community asset signals better daily experience for visitors, stronger programming, and a catalyst for local pride. Residents who use the space (families, seniors, youth groups) gain immediate value from updated rooms, safety fixes, and new amenities. Local coverage notes comparable upgrades have boosted participation and volunteer numbers in nearby districts. Supporters would argue this project is an investment that quickly pays back in engagement and well-being.`,
+    point: `${headline} reports a concrete development: ${contentSummary}. Supporters would highlight who benefits first and how it improves day-to-day experience, calling out any clear wins, numbers, or named stakeholders. They’d connect it to recent momentum or precedent and close with one practical upside (e.g., access, performance, participation).`,
 
-    pointTitle: `Promising Progress Ahead`,
+    pointTitle: `Supporters See Momentum`,
 
-    counterpoint: `Title: Hidden Risks Lurking\nEven with ${headline}, the details in "${contentSummary}" leave gaps: what were the costs, and who funds ongoing maintenance? Similar community-center overhauls have led to higher usage fees, uneven access, or staffing shortfalls once the ribbon-cutting passes. Neighbors might worry about parking, noise, or whether programs displaced prior users during the rebuild. Budget reports in other towns show renovation overruns that squeeze future services. A cautious take is to ask for transparent costs, staffing plans, and equity guarantees before calling this a clear win.`,
+    counterpoint: `${headline} also raises questions: ${contentSummary}. Skeptics would flag missing details (costs, tradeoffs, or who loses access), compare to similar cases that went sideways, and cite a practical caution such as fees, delays, or inequitable impact. They’d suggest a concrete alternative safeguard or action before embracing the change.`,
 
-    counterpointTitle: `Hidden Risks Lurking`,
+    counterpointTitle: `Skeptics Flag Tradeoffs`,
 
-    neutral: `The article "${headline}" presents the following facts: ${contentSummary} The report details specific events and information that readers should evaluate based on the full context and multiple sources.`
+    neutral: `The article outlines: ${contentSummary} Readers should review the full context and multiple sources for details on timing, scope, and stakeholders.`
   };
 };
 
