@@ -1,8 +1,8 @@
-const OpenAI = require('openai');
+const Anthropic = require('@anthropic-ai/sdk');
 require('dotenv').config();
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY
 });
 
 /**
@@ -21,18 +21,21 @@ const generateSummaries = async (articleContent) => {
     const summaries = [];
 
     for (const perspective of perspectives) {
-      const response = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
+      const response = await anthropic.messages.create({
+        model: 'claude-3-5-sonnet-20241022',
+        max_tokens: 256,
+        system: `You are an assistant that summarizes news articles from a ${perspective.viewpoint} perspective. Keep summaries concise (3-4 sentences).`,
         messages: [
-          { role: "system", content: `You are an assistant that summarizes news articles from a ${perspective.viewpoint} perspective. Keep summaries concise (3-4 sentences).` },
-          { role: "user", content: `${perspective.prompt} ${articleContent}` }
-        ],
-        max_tokens: 150
+          {
+            role: 'user',
+            content: `${perspective.prompt} ${articleContent}`
+          }
+        ]
       });
 
       summaries.push({
         viewpoint: perspective.viewpoint,
-        summary: response.choices[0].message.content.trim()
+        summary: response.content[0].text.trim()
       });
     }
 
@@ -52,11 +55,11 @@ const generateSummaries = async (articleContent) => {
  */
 const generateDetailedPerspectives = async (headline, content, writingStyle = 'default') => {
   try {
-    // Check if OpenAI API key is valid
-    console.log('Checking OpenAI API key:', process.env.OPENAI_API_KEY ? 'Key exists' : 'No key');
+    // Check if Anthropic API key is valid
+    console.log('Checking Anthropic API key:', process.env.ANTHROPIC_API_KEY ? 'Key exists' : 'No key');
 
-    if (!process.env.OPENAI_API_KEY) {
-      console.log('No OpenAI API key found. Using fallback perspectives.');
+    if (!process.env.ANTHROPIC_API_KEY) {
+      console.log('No Anthropic API key found. Using fallback perspectives.');
       return generateFallbackPerspectives(headline, content);
     }
 
@@ -127,17 +130,20 @@ Produce three sections:
       console.log('Using style instructions:', styleInstructions);
     }
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: `Headline: ${headline}\nSummary: ${content}` }
-      ],
+    const response = await anthropic.messages.create({
+      model: 'claude-3-5-sonnet-20241022',
       max_tokens: 1500,
-      temperature: 0.7
+      temperature: 0.7,
+      system: systemPrompt,
+      messages: [
+        {
+          role: 'user',
+          content: `Headline: ${headline}\nSummary: ${content}`
+        }
+      ]
     });
 
-    const fullAnalysis = response.choices[0].message.content.trim();
+    const fullAnalysis = response.content[0].text.trim();
 
     // Parse the response to extract the three perspectives
     const sections = parseOpposingViewsResponse(fullAnalysis);
@@ -409,33 +415,30 @@ const generateLocalNews = async (zipCode, count = 5) => {
   try {
     console.log(`Searching for local news for zip code: ${zipCode}`);
 
-    // Check if OpenAI API key is valid
-    if (!process.env.OPENAI_API_KEY) {
-      console.log('No OpenAI API key found. Using fallback local news.');
+    // Check if Anthropic API key is valid
+    if (!process.env.ANTHROPIC_API_KEY) {
+      console.log('No Anthropic API key found. Using fallback local news.');
       return [];
     }
 
-    // First, ask ChatGPT to identify the location based on the zip code
-    const locationResponse = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+    // First, ask Claude to identify the location based on the zip code
+    const locationResponse = await anthropic.messages.create({
+      model: 'claude-3-5-sonnet-20241022',
+      max_tokens: 200,
+      temperature: 0.3,
+      system: 'You are a helpful assistant that provides information about geographic locations based on zip codes.',
       messages: [
         {
-          role: "system",
-          content: "You are a helpful assistant that provides information about geographic locations based on zip codes."
-        },
-        {
-          role: "user",
+          role: 'user',
           content: `What city, county, and state is zip code ${zipCode} located in? Respond with just the location information in a simple format like "City, County, State".`
         }
-      ],
-      max_tokens: 100,
-      temperature: 0.3
+      ]
     });
 
-    const locationInfo = locationResponse.choices[0].message.content.trim();
+    const locationInfo = locationResponse.content[0].text.trim();
     console.log(`Zip code ${zipCode} corresponds to: ${locationInfo}`);
 
-    // Now, ask ChatGPT to search for real news articles about this location
+    // Now, ask Claude to search for real news articles about this location
     // Get current date for the prompt
     const currentDate = new Date();
     const formattedDate = currentDate.toLocaleDateString('en-US', {
@@ -474,17 +477,20 @@ Format your response as a valid JSON array with the following structure for each
 
 Focus on diverse topics (local government, community events, business, education, crime, etc.) that would be relevant to people living in this location. These should be FRESH, RECENT news stories from the last 24 hours that someone could actually find if they searched for news about this location today.`;
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: `Search for ${count} real, FRESH news articles from the LAST 24 HOURS about ${locationInfo}. Only include the most recent stories from today or yesterday.` }
-      ],
+    const response = await anthropic.messages.create({
+      model: 'claude-3-5-sonnet-20241022',
       max_tokens: 2000,
-      temperature: 0.7
+      temperature: 0.7,
+      system: systemPrompt,
+      messages: [
+        {
+          role: 'user',
+          content: `Search for ${count} real, FRESH news articles from the LAST 24 HOURS about ${locationInfo}. Only include the most recent stories from today or yesterday.`
+        }
+      ]
     });
 
-    let content = response.choices[0].message.content.trim();
+    let content = response.content[0].text.trim();
     console.log('Found local news content:', content);
 
     try {

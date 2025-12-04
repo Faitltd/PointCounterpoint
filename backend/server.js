@@ -10,7 +10,7 @@ console.log('Environment variables loaded:');
 console.log('SUPABASE_URL:', process.env.SUPABASE_URL);
 console.log('SUPABASE_KEY exists:', !!process.env.SUPABASE_KEY);
 console.log('NEWS_API_KEY exists:', !!process.env.NEWS_API_KEY);
-console.log('OPENAI_API_KEY exists:', !!process.env.OPENAI_API_KEY);
+console.log('ANTHROPIC_API_KEY exists:', !!process.env.ANTHROPIC_API_KEY);
 
 // Only import the article refresh service if environment variables are properly loaded
 let articleRefreshService = null;
@@ -55,7 +55,7 @@ app.get('/api/health', (req, res) => {
     status: 'healthy',
     timestamp: new Date().toISOString(),
     env: {
-      openai: !!process.env.OPENAI_API_KEY,
+      anthropic: !!process.env.ANTHROPIC_API_KEY,
       news: !!process.env.NEWS_API_KEY,
       supabase: !!process.env.SUPABASE_KEY
     }
@@ -93,7 +93,7 @@ const port = process.env.PORT || 5001;
 console.log('Starting server...');
 console.log('Environment check:');
 console.log('PORT:', port);
-console.log('OPENAI_API_KEY present:', !!process.env.OPENAI_API_KEY);
+console.log('ANTHROPIC_API_KEY present:', !!process.env.ANTHROPIC_API_KEY);
 console.log('NEWS_API_KEY present:', !!process.env.NEWS_API_KEY);
 console.log('SUPABASE_URL:', process.env.SUPABASE_URL);
 console.log('SUPABASE_KEY present:', !!process.env.SUPABASE_KEY);

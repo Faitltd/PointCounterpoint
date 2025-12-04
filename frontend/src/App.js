@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { BrowserRouter as Router, Routes, Route, useParams, useNavigate, useLocation } from 'react-router-dom';
 import './reset.css'; // Import cross-browser CSS reset
 import './modern-theme.css'; // Import our modern theme
@@ -21,32 +22,36 @@ function App() {
 
   useEffect(() => {
     fetchArticles(currentCategory);
-  }, [currentCategory]);
+  }, [currentCategory, globalWritingStyle]);
 
   const fetchArticles = async (category) => {
     setLoading(true);
 
     try {
-      console.log(`Loading sample articles for category: ${category}`);
+      console.log(`Fetching live articles for category: ${category}`);
+      const backendUrl = config.API_URL;
+      const apiUrl = `${backendUrl}/api/news/headlines`;
 
-      // Short timeout to simulate loading
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const response = await axios.get(apiUrl, {
+        params: {
+          category,
+          writingStyle: globalWritingStyle
+        },
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      });
 
-      // Get the sample articles for the selected category, or fall back to general
-      const categoryArticles = sampleArticles[category] || sampleArticles.general;
-
-      if (categoryArticles && categoryArticles.length > 0) {
-        setArticles(categoryArticles);
-        setError(null);
-      } else {
-        throw new Error('No articles available for this category');
-      }
+      setArticles(response.data || []);
+      setError(null);
     } catch (err) {
-      console.error('Error loading articles:', err);
-      setError('Failed to load articles. Please try again later.');
+      console.error('Error loading articles, falling back to sample data:', err);
+      setError('Failed to load live articles. Showing sample stories.');
 
-      // Fallback to general articles
-      setArticles(sampleArticles.general);
+      // Fallback to sample data
+      const categoryArticles = sampleArticles[category] || sampleArticles.general;
+      setArticles(categoryArticles);
     } finally {
       setLoading(false);
     }

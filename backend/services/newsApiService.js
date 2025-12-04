@@ -394,11 +394,6 @@ const MOCK_ARTICLES = {
  */
 const fetchTopHeadlines = async (category = 'general') => {
   try {
-    // For local testing, always use mock data
-    console.log(`Using mock data for category: ${category}`);
-    return getMockArticles(category);
-
-    /* Commented out for local testing
     // Check if we have a valid API key
     if (!NEWS_API_KEY) {
       console.log('No NewsAPI key found. Using mock data.');
@@ -444,7 +439,6 @@ const fetchTopHeadlines = async (category = 'general') => {
       console.log('Falling back to mock data');
       return getMockArticles(category);
     }
-    */
   } catch (error) {
     console.error('Error fetching news:', error.message);
     // Always return some data to prevent the application from breaking

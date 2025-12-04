@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import WritingStyleDropdown from './WritingStyleDropdown.js';
 import './NewspaperView.css';
@@ -29,14 +30,38 @@ function NewspaperSummaryView({ writingStyle: globalWritingStyle, onCategoryChan
 
   useEffect(() => {
     const fetchArticle = async () => {
-      console.log('Loading sample article with ID:', id);
+      console.log('Loading article with ID:', id);
       setLoading(true);
 
       try {
-        // Short timeout to simulate loading
-        await new Promise(resolve => setTimeout(resolve, 500));
+        const backendUrl = config.API_URL;
+        const apiUrl = `${backendUrl}/api/news/article/${id}`;
 
-        // Get the sample article for the ID, or create a fallback
+        const response = await axios.get(apiUrl, {
+          params: {
+            writingStyle: globalWritingStyle
+          },
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        });
+
+        const articleData = response.data;
+        console.log('Article data:', articleData);
+
+        setArticle(articleData);
+        setError(null);
+
+        // If we don't have a slug in the URL, update the URL with the article title
+        if (!slug && articleData.title) {
+          const articleSlug = slugify(articleData.title);
+          const newUrl = `/article/${id}/${articleSlug}`;
+          navigate(newUrl, { replace: true });
+        }
+      } catch (err) {
+        console.error('Error loading article from backend, using sample fallback:', err);
+        // Fallback to sample data
         const articleData = sampleArticleDetails[id] || {
           id: id,
           title: 'Sample Article',
@@ -59,30 +84,21 @@ function NewspaperSummaryView({ writingStyle: globalWritingStyle, onCategoryChan
           ]
         };
 
-        console.log('Article data:', articleData);
-
-        // Store the article data
         setArticle(articleData);
         setError(null);
 
-        // If we don't have a slug in the URL, update the URL with the article title
         if (!slug && articleData.title) {
           const articleSlug = slugify(articleData.title);
           const newUrl = `/article/${id}/${articleSlug}`;
-
-          // Use replace to avoid adding to browser history
           navigate(newUrl, { replace: true });
         }
-      } catch (err) {
-        console.error('Error loading article:', err);
-        setError('Failed to load article. Please try again later.');
       } finally {
         setLoading(false);
       }
     };
 
     fetchArticle();
-  }, [id, slug, navigate]);
+  }, [id, slug, navigate, globalWritingStyle]);
 
   const regeneratePerspectives = async (articleData, style) => {
     console.log('Simulating perspective generation with style:', style);
