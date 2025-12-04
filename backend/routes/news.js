@@ -231,17 +231,9 @@ router.get('/headlines', async (req, res) => {
 
       if (articles && articles.length > 0) {
         // Deduplicate and ensure at least 4 unique stories
-        let dedupedArticles = dedupeArticles(articles)
+        const dedupedArticles = dedupeArticles(articles)
           .map(normalizeArticle)
           .filter(a => !excludeSet.has(a.id));
-
-        // If dedupe collapsed too far, fall back to normalized originals (even if some duplicates) to avoid samples
-        if (dedupedArticles.length < 4 && articles && articles.length > dedupedArticles.length) {
-          dedupedArticles = articles
-            .map(normalizeArticle)
-            .filter(a => !excludeSet.has(a.id));
-          console.log(`Dedupe too strict, using normalized originals count=${dedupedArticles.length}`);
-        }
 
         if (dedupedArticles.length < 4) {
           console.log(`Only ${dedupedArticles.length} unique from Supabase, pulling more from NewsAPI/Webz...`);
@@ -269,16 +261,9 @@ router.get('/headlines', async (req, res) => {
       // If no articles in Supabase, try NewsAPI
       console.log('No articles found in Supabase, trying NewsAPI...');
         const newsApiArticles = await getRandomNewsApiArticles(15, category);
-      let dedupedNewsApiArticles = dedupeArticles(newsApiArticles)
+      const dedupedNewsApiArticles = dedupeArticles(newsApiArticles)
           .map(normalizeArticle)
           .filter(a => !excludeSet.has(a.id));
-
-      if (dedupedNewsApiArticles.length < 4 && newsApiArticles.length > dedupedNewsApiArticles.length) {
-        dedupedNewsApiArticles = newsApiArticles
-          .map(normalizeArticle)
-          .filter(a => !excludeSet.has(a.id));
-        console.log(`Dedupe too strict on NewsAPI/Webz, using normalized originals count=${dedupedNewsApiArticles.length}`);
-      }
       console.log(`Retrieved ${newsApiArticles.length} articles from NewsAPI (${dedupedNewsApiArticles.length} after dedupe)`);
 
       // Save the NewsAPI articles to Supabase for future use
