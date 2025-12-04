@@ -231,7 +231,7 @@ router.get('/headlines', async (req, res) => {
 
       if (articles && articles.length > 0) {
         // Deduplicate and ensure at least 4 unique stories
-        const dedupedArticles = dedupeArticles(articles)
+        let dedupedArticles = dedupeArticles(articles)
           .map(normalizeArticle)
           .filter(a => !excludeSet.has(a.id));
 
