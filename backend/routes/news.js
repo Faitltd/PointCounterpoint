@@ -365,8 +365,18 @@ router.get('/article/:id', async (req, res) => {
             )
           );
 
-        if (!article.perspectives || article.perspectives.length === 0 || writingStyle !== 'standard' || hasGenericFallback) {
-          console.log(`Generating perspectives for article with style: ${writingStyle}... (regenerate=${hasGenericFallback})`);
+        const hasLowQuality = Array.isArray(article.perspectives) &&
+          article.perspectives.some(p =>
+            typeof p.summary === 'string' &&
+            (
+              p.summary.trim().toLowerCase() === (article.title || '').trim().toLowerCase() ||
+              p.summary.toLowerCase().includes('moves the story forward') ||
+              p.summary.toLowerCase().includes('also exposes gaps')
+            )
+          );
+
+        if (!article.perspectives || article.perspectives.length === 0 || writingStyle !== 'standard' || hasGenericFallback || hasLowQuality) {
+          console.log(`Generating perspectives for article with style: ${writingStyle}... (regenerate=${hasGenericFallback || hasLowQuality})`);
           await generateAndSavePerspectives(article, writingStyle);
         }
 
