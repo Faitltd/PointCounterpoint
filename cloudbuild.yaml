@@ -7,7 +7,6 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/fait-444705/pointcounterpoint-backend']
 
-  # Deploy backend to Cloud Run with increased timeout and concurrency=1 for debugging
   # Deploy backend to Cloud Run with secrets
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
@@ -19,16 +18,21 @@ steps:
       - '--region=us-central1'
       - '--platform=managed'
       - '--allow-unauthenticated'
-      - '--set-env-vars=SUPABASE_URL=https://ueqselkevtzpzgcapbzc.supabase.co'
-      - '--update-secrets=OPENAI_API_KEY=openai-api-key:latest,NEWS_API_KEY=news-api-key:latest,SUPABASE_KEY=supabase-key:latest'
+      - '--set-env-vars=SUPABASE_URL=https://ydisdyadjupyswcpbxzu.supabase.co'
+      - '--update-secrets=ANTHROPIC_API_KEY=anthropic-api-key:latest,NEWS_API_KEY=news-api-key:latest,SUPABASE_KEY=supabase-key:latest'
       - '--timeout=5m'
-      - '--concurrency=1'
+      - '--concurrency=80'
       - '--cpu=1'
       - '--memory=512Mi'
 
-  # Build the frontend container image
+  # Build the frontend container image with production API URL
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/fait-444705/pointcounterpoint-frontend', './frontend']
+    args:
+      - 'build'
+      - '--build-arg=REACT_APP_API_URL=https://pc.itsfait.com'
+      - '-t'
+      - 'gcr.io/fait-444705/pointcounterpoint-frontend'
+      - './frontend'
 
   # Push the frontend container image to Container Registry
   - name: 'gcr.io/cloud-builders/docker'

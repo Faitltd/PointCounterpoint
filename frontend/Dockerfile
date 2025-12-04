@@ -4,6 +4,10 @@ FROM --platform=linux/amd64 node:18-alpine as build
 # Set working directory
 WORKDIR /app
 
+# Accept build argument for API URL
+ARG REACT_APP_API_URL=https://pc.itsfait.com
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
+
 # Copy package.json and package-lock.json
 COPY package*.json ./
 
