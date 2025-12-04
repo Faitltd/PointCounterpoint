@@ -6,46 +6,19 @@
  */
 
 const cron = require('node-cron');
-const axios = require('axios');
 const { createClient } = require('@supabase/supabase-js');
+const { fetchTopHeadlines } = require('./newsApiService');
 require('dotenv').config();
 
 // Initialize Supabase client
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
-const newsApiKey = process.env.NEWS_API_KEY;
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 /**
- * Fetch articles from NewsAPI
- * @param {string} category - News category
- * @param {number} pageSize - Number of articles to fetch
- * @returns {Promise<Array>} - Array of articles
- */
-async function fetchArticlesFromNewsApi(category = 'general', pageSize = 10) {
-  try {
-    const url = `https://newsapi.org/v2/top-headlines?country=us&category=${category}&pageSize=${pageSize}&apiKey=${newsApiKey}`;
-    console.log(`[ArticleRefresh] Fetching articles for category: ${category}`);
-
-    const response = await axios.get(url);
-
-    if (response.data && response.data.articles) {
-      console.log(`[ArticleRefresh] Retrieved ${response.data.articles.length} articles from NewsAPI for ${category}`);
-      return response.data.articles;
-    } else {
-      console.error('[ArticleRefresh] No articles found in NewsAPI response');
-      return [];
-    }
-  } catch (error) {
-    console.error('[ArticleRefresh] Error fetching articles from NewsAPI:', error.message);
-    return [];
-  }
-}
-
-/**
  * Save an article to Supabase
- * @param {Object} article - Article object from NewsAPI
+ * @param {Object} article - Normalized article object
  * @param {string} category - Category of the article
  * @returns {Promise<Object>} - Saved article
  */
@@ -66,11 +39,11 @@ async function saveArticleToSupabase(article, category) {
     // Insert new article - handle case where last_shown_at column might not exist yet
     const articleData = {
       title: article.title,
-      content: article.content || article.description,
-      source_name: article.source.name,
-      source_url: article.source.url || `https://${article.source.name.toLowerCase().replace(/\s+/g, '')}.com`,
+      content: article.content || article.description || '',
+      source_name: article.source?.name || article.source_name || 'Unknown Source',
+      source_url: article.source?.url || article.source_url || article.url || '',
       url: article.url,
-      published_at: article.publishedAt || new Date(),
+      published_at: article.publishedAt || article.published_at || new Date(),
       category: category
     };
 
@@ -108,16 +81,15 @@ async function cleanupOldArticles(daysOld = 7) {
     cutoffDate.setDate(cutoffDate.getDate() - daysOld);
 
     // Delete old articles
-    const { data, error, count } = await supabase
+    const { error } = await supabase
       .from('articles')
       .delete()
-      .lt('published_at', cutoffDate.toISOString())
-      .select('count');
+      .lt('published_at', cutoffDate.toISOString());
 
     if (error) {
       console.error('[ArticleRefresh] Error cleaning up old articles:', error);
     } else {
-      console.log(`[ArticleRefresh] Successfully removed ${count || 'unknown number of'} old articles`);
+      console.log('[ArticleRefresh] Cleanup completed');
     }
   } catch (error) {
     console.error('[ArticleRefresh] Error in cleanupOldArticles:', error.message);
@@ -140,8 +112,8 @@ async function refreshAllArticles() {
     for (const category of categories) {
       console.log(`[ArticleRefresh] Processing category: ${category}`);
 
-      // Fetch articles from NewsAPI
-      const articles = await fetchArticlesFromNewsApi(category, 10);
+      // Fetch articles from all providers
+      const articles = await fetchTopHeadlines(category, 15);
 
       // Save each article to Supabase
       for (const article of articles) {
