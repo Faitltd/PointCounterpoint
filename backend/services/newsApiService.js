@@ -4,6 +4,8 @@ require('dotenv').config();
 // We'll use the NewsAPI.org service with the provided API key
 const NEWS_API_KEY = process.env.NEWS_API_KEY;
 const NEWS_API_URL = 'https://newsapi.org/v2';
+const WEBZIO_API_KEY = process.env.WEBZIO_API_KEY;
+const WEBZIO_API_URL = 'https://api.webz.io/news-api/v1/search';
 
 // Mock data for when the API key is missing or invalid
 const MOCK_ARTICLES = {
@@ -394,13 +396,23 @@ const MOCK_ARTICLES = {
  */
 const fetchTopHeadlines = async (category = 'general') => {
   try {
-    // Check if we have a valid API key
+    // Prefer Webz.io if key is present
+    if (WEBZIO_API_KEY) {
+      console.log(`Fetching news articles from Webz.io for category: ${category}`);
+      const webzArticles = await fetchFromWebz(category);
+      if (webzArticles.length > 0) {
+        return webzArticles;
+      }
+      console.log('Webz.io returned no articles, falling back to NewsAPI...');
+    }
+
+    // Check if we have a valid NewsAPI key
     if (!NEWS_API_KEY) {
       console.log('No NewsAPI key found. Using mock data.');
       return getMockArticles(category);
     }
 
-    console.log(`Fetching news articles for category: ${category}`);
+    console.log(`Fetching news articles from NewsAPI for category: ${category}`);
 
     try {
       const response = await axios.get(`${NEWS_API_URL}/top-headlines`, {
@@ -443,6 +455,48 @@ const fetchTopHeadlines = async (category = 'general') => {
     console.error('Error fetching news:', error.message);
     // Always return some data to prevent the application from breaking
     return getMockArticles(category);
+  }
+};
+
+/**
+ * Fetch articles from Webz.io
+ * @param {string} category - News category
+ * @returns {Promise<Array>} - Array of news articles
+ */
+const fetchFromWebz = async (category = 'general') => {
+  try {
+    const response = await axios.get(WEBZIO_API_URL, {
+      params: {
+        token: WEBZIO_API_KEY,
+        q: `site_type:news AND language:english AND category:${category}`,
+        sort: 'published',
+        size: 20
+      }
+    });
+
+    const posts = response.data?.posts || response.data?.articles || [];
+
+    if (!Array.isArray(posts) || posts.length === 0) {
+      console.log('Webz.io returned no posts');
+      return [];
+    }
+
+    return posts.map((post, index) => ({
+      _id: `webz-${Date.now()}-${index}`,
+      title: post.title || 'Untitled Article',
+      source: {
+        name: post.thread?.site_full || post.source?.title || 'Unknown Source',
+        url: post.thread?.site || post.url
+      },
+      url: post.url || post.thread?.url || post.canonical_url || post.link,
+      publishedAt: post.published ? new Date(post.published) : new Date(),
+      content: post.text || post.excerpt || post.summary || 'No content available',
+      category,
+      perspectives: []
+    }));
+  } catch (error) {
+    console.error('Error calling Webz.io:', error.message);
+    return [];
   }
 };
 
@@ -605,5 +659,6 @@ const getMockLocalArticles = (zipCode, count = 5) => {
 module.exports = {
   fetchTopHeadlines,
   getRandomArticles,
-  fetchLocalNews
+  fetchLocalNews,
+  fetchFromWebz
 };

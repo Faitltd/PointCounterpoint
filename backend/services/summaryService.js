@@ -82,8 +82,8 @@ Produce three sections:
 2. Point
    • Start with a provocative, attention-grabbing title (3-5 words) that captures this perspective.
    • Format the title as "Title: [Your Title Here]" on its own line.
-   • Then provide a paragraph explaining this perspective on the issue.
-   • Include at least one citation to a source outside the article that would support this view.
+   • Then write 3-5 sentences supporting the article like a well-read fan who can point to specific details and upside.
+   • Emphasize why this perspective is enthusiastic, who would appreciate it, and one practical upside they’d highlight.
    • This should represent one reasonable interpretation or viewpoint on the issue.
    • Do NOT default to political points of view unless the article is explicitly political.
    • Do NOT use markdown symbols like asterisks (*) or hash symbols (#).
@@ -94,8 +94,8 @@ Produce three sections:
 3. Counterpoint
    • Start with a provocative, attention-grabbing title (3-5 words) that captures this opposing perspective.
    • Format the title as "Title: [Your Title Here]" on its own line.
-   • Then provide a paragraph explaining this opposing perspective on the issue.
-   • Include at least one citation to a source outside the article that would support this view.
+   • Then write 3-5 sentences explaining why an informed reader is not a fan of the article, citing specific details or tradeoffs they dislike.
+   • Emphasize who would be skeptical, what feels weak or risky, and one practical caution or alternative they’d stress.
    • This should represent an opposing interpretation or viewpoint to the Point section.
    • Do NOT default to political points of view unless the article is explicitly political.
    • Do NOT use markdown symbols like asterisks (*) or hash symbols (#).
