@@ -3,7 +3,6 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import ZipCodeInput from './ZipCodeInput.js';
 import { createArticleUrl, createCategoryUrl } from '../utils/urlUtils.js';
 
-function ArticleList({ articles, loading, error, onRefresh, writingStyle, onWritingStyleChange, onCategoryChange, currentCategory = 'general', onZipCodeSubmit }) {
 function ArticleList({ articles, loading, error, onRefresh, onCategoryChange, currentCategory = 'general', onZipCodeSubmit }) {
   const [lastRefreshTime, setLastRefreshTime] = useState(new Date());
   const [timeAgo, setTimeAgo] = useState('');
