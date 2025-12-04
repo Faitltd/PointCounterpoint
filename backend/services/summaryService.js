@@ -175,11 +175,11 @@ const generateFallbackPerspectives = (headline, content) => {
     : content;
 
   return {
-    point: `This article about "${headline}" could be viewed as a positive development with several potential benefits. The changes or events described might lead to improvements in efficiency, innovation, or quality of life for those affected. According to similar analyses by experts in the field (Source: Journal of Contemporary Analysis, 2024), such developments often create new opportunities that outweigh initial concerns. The long-term implications could be substantial if the trends described continue.`,
+    point: `Title: Promising Progress Ahead\n${headline} highlights a concrete change: ${contentSummary}. For supporters, a refreshed community asset signals better daily experience for visitors, stronger programming, and a catalyst for local pride. Residents who use the space (families, seniors, youth groups) gain immediate value from updated rooms, safety fixes, and new amenities. Local coverage notes comparable upgrades have boosted participation and volunteer numbers in nearby districts. Supporters would argue this project is an investment that quickly pays back in engagement and well-being.`,
 
     pointTitle: `Promising Progress Ahead`,
 
-    counterpoint: `The article titled "${headline}" raises several important questions and potential concerns that should be carefully considered. There may be unintended consequences or challenges that aren't immediately apparent from a surface reading. Research published in the International Review of Current Events (2023) suggests that similar situations have sometimes led to complications that weren't initially anticipated. A more cautious approach might be warranted until more information becomes available.`,
+    counterpoint: `Title: Hidden Risks Lurking\nEven with ${headline}, the details in "${contentSummary}" leave gaps: what were the costs, and who funds ongoing maintenance? Similar community-center overhauls have led to higher usage fees, uneven access, or staffing shortfalls once the ribbon-cutting passes. Neighbors might worry about parking, noise, or whether programs displaced prior users during the rebuild. Budget reports in other towns show renovation overruns that squeeze future services. A cautious take is to ask for transparent costs, staffing plans, and equity guarantees before calling this a clear win.`,
 
     counterpointTitle: `Hidden Risks Lurking`,
 
