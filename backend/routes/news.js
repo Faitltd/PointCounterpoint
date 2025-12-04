@@ -171,6 +171,28 @@ const dedupeArticles = (articles = []) => {
   });
 };
 
+// Normalize article shape for frontend expectations
+const normalizeArticle = (article = {}) => {
+  // Prefer existing id, fallback to _id, fallback to URL hash
+  const id = article.id || article._id || `news-${Buffer.from((article.url || article.title || Date.now().toString())).toString('base64').slice(0, 12)}`;
+
+  // Map published date field
+  const published_at = article.published_at || article.publishedAt || article.published_at || new Date().toISOString();
+
+  // Map source fields
+  const source = article.source || {};
+  const source_name = article.source_name || source.name || 'Unknown Source';
+  const source_url = article.source_url || source.url || article.url || '';
+
+  return {
+    ...article,
+    id,
+    published_at,
+    source_name,
+    source_url
+  };
+};
+
 // Get headlines by category
 router.get('/headlines', async (req, res) => {
   try {
@@ -205,7 +227,7 @@ router.get('/headlines', async (req, res) => {
 
       if (articles && articles.length > 0) {
         // Deduplicate and ensure at least 4 unique stories
-        let dedupedArticles = dedupeArticles(articles);
+        let dedupedArticles = dedupeArticles(articles).map(normalizeArticle);
 
         if (dedupedArticles.length < 4) {
           console.log(`Only ${dedupedArticles.length} unique from Supabase, pulling more from NewsAPI/Webz...`);
@@ -229,7 +251,7 @@ router.get('/headlines', async (req, res) => {
       // If no articles in Supabase, try NewsAPI
       console.log('No articles found in Supabase, trying NewsAPI...');
       const newsApiArticles = await getRandomNewsApiArticles(15, category);
-      const dedupedNewsApiArticles = dedupeArticles(newsApiArticles);
+      const dedupedNewsApiArticles = dedupeArticles(newsApiArticles).map(normalizeArticle);
       console.log(`Retrieved ${newsApiArticles.length} articles from NewsAPI (${dedupedNewsApiArticles.length} after dedupe)`);
 
       // Save the NewsAPI articles to Supabase for future use
