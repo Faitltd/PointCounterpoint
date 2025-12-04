@@ -157,6 +157,20 @@ const handleError = (error, fallbackData) => {
   return fallbackData;
 };
 
+// Helper to deduplicate articles based on URL/title/source
+const dedupeArticles = (articles = []) => {
+  const seen = new Set();
+  return articles.filter(article => {
+    const title = (article.title || '').toLowerCase();
+    const source = (article.source_name || article.source?.name || '').toLowerCase();
+    const url = (article.url || '').toLowerCase();
+    const key = `${url}|${title}|${source}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
+
 // Get headlines by category
 router.get('/headlines', async (req, res) => {
   try {
@@ -190,16 +204,17 @@ router.get('/headlines', async (req, res) => {
       }
 
       if (articles && articles.length > 0) {
-        // Limit to 5 articles
-        const limitedArticles = articles.slice(0, 5);
-        console.log(`Returning ${limitedArticles.length} articles`);
+        // Deduplicate by URL/title/source and limit to 5
+      const limitedArticles = dedupeArticles(articles).slice(0, 5);
+        console.log(`Returning ${limitedArticles.length} articles after dedupe`);
         return res.json(limitedArticles);
       }
 
       // If no articles in Supabase, try NewsAPI
       console.log('No articles found in Supabase, trying NewsAPI...');
       const newsApiArticles = await getRandomNewsApiArticles(5, category);
-      console.log(`Retrieved ${newsApiArticles.length} articles from NewsAPI`);
+      const dedupedNewsApiArticles = dedupeArticles(newsApiArticles);
+      console.log(`Retrieved ${newsApiArticles.length} articles from NewsAPI (${dedupedNewsApiArticles.length} after dedupe)`);
 
       // Save the NewsAPI articles to Supabase for future use
       console.log('Saving NewsAPI articles to Supabase...');
@@ -222,15 +237,15 @@ router.get('/headlines', async (req, res) => {
         }
       }
 
-      return res.json(newsApiArticles);
+      return res.json(dedupedNewsApiArticles.slice(0, 5));
     } catch (apiError) {
       console.error('Error fetching articles:', apiError);
 
       // Last resort: use sample data
       console.log('Using sample data as fallback');
       const filteredArticles = category === 'all'
-        ? sampleArticles
-        : sampleArticles.filter(article => article.category === category);
+        ? dedupeArticles(sampleArticles)
+        : dedupeArticles(sampleArticles.filter(article => article.category === category));
 
       // Shuffle and limit to 5 random articles
       const shuffled = [...filteredArticles].sort(() => 0.5 - Math.random());
